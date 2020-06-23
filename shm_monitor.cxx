@@ -87,18 +87,13 @@ const Int_t kMAX1 = 8;
 # define hnoent  hnoent_
 # define hgive   hgive_
 # define hgiven  hgiven_
-# define hprntu  hprntu_
 # define hgnpar  hgnpar_
 # define hgnf    hgnf_
 # define hgnt    hgnt_
 # define rzink   rzink_
 # define hdcofl  hdcofl_
-# define hmaxim  hmaxim_
-# define hminim  hminim_
 # define hdelet  hdelet_
 # define hntvar2 hntvar2_
-# define hbname  hbname_
-# define hbnamc  hbnamc_
 # define hbnam   hbnam_
 # define hi      hi_
 # define hie     hie_
@@ -135,14 +130,11 @@ extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFC
 
 extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&,const int, const int);
 
-extern "C" void  type_of_call hprntu(const int&);
 extern "C" void  type_of_call hgnpar(const int&,const char *,const int);
 extern "C" void  type_of_call hgnf(const int&,const int&,const float&,const int&);
 extern "C" void  type_of_call hgnt(const int&,const int&,const int&);
 extern "C" void  type_of_call rzink(const int&,const int&,const char *,const int);
 extern "C" void  type_of_call hdcofl();
-extern "C" void  type_of_call hmaxim(const int&,const float&);
-extern "C" void  type_of_call hminim(const int&,const float&);
 extern "C" void  type_of_call hdelet(const int&);
 extern "C" void  type_of_call hix(const int&,const int&,const float&);
 extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
@@ -225,13 +217,9 @@ int main(int argc, char **argv)
    int pawc_size = PAWC_SIZE;
    hlimit(pawc_size);
 
-   int lun = 10;
    /* c/o Nobu 2018/01/27 23:40:23 -->
-#ifndef WIN32
+   int lun = 10;
    hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier,7,strlen(file_in),2);
-#else
-   hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier);
-#endif
 --> End */
 
    TString str_shm_names = shm_names;
