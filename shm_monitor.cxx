@@ -80,7 +80,6 @@ const Int_t kMIN1 = 7;
 const Int_t kMAX1 = 8;
 
 /*  Define the names of the Fortran subroutine and functions for the different OSs*/
-
 # define hlimit  hlimit_
 # define hropen  hropen_
 # define hrin    hrin_
@@ -105,54 +104,40 @@ const Int_t kMAX1 = 8;
 # define hcdir   hcdir_
 # define zitoh   zitoh_
 # define uhtoc   uhtoc_
-
 # define hlimap  hlimap_ /* nobu added */
 # define hidall  hidall_ /* nobu added */
 # define hrin2   hrin2_ /* nobu added */
-
-# define type_of_call
 # define DEFCHAR  const char*
 # define PASSCHAR(string) string
 
-extern "C" void  type_of_call hlimit(const int&);
-extern "C" void  type_of_call hropen(const int&,DEFCHAR,DEFCHAR,DEFCHAR,
-                        const int&,const int&,const int,const int,const int);
-
-extern "C" void  type_of_call hrin(const int&,const int&,const int&);
-extern "C" void  type_of_call hnoent(const int&,const int&);
-extern "C" void  type_of_call hgive(const int&,DEFCHAR,const int&,const float&,const float&,
-   const int&,const float&,const float&,const int&,const int&,const int);
-
-extern "C" void  type_of_call hgiven(const int&,DEFCHAR,const int&,DEFCHAR,
-   const float&,const float&,const int,const int);
-
-extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&,const int,const int, const int);
-
-extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&,const int, const int);
-
-extern "C" void  type_of_call hgnpar(const int&,const char *,const int);
-extern "C" void  type_of_call hgnf(const int&,const int&,const float&,const int&);
-extern "C" void  type_of_call hgnt(const int&,const int&,const int&);
-extern "C" void  type_of_call rzink(const int&,const int&,const char *,const int);
-extern "C" void  type_of_call hdcofl();
-extern "C" void  type_of_call hdelet(const int&);
-extern "C" void  type_of_call hix(const int&,const int&,const float&);
-extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
-
-extern "C" void  type_of_call hlimap(const int&,const char*, const int); /* Nobu added */
-extern "C" void  type_of_call hidall(const int*, const int&); /* Nobu added */
-extern "C" void  type_of_call hrin2(const int&,const int&,const int&); /* nobu added */
-
-extern "C" float type_of_call hi(const int&,const int&);
-extern "C" float type_of_call hie(const int&,const int&);
-extern "C" float type_of_call hif(const int&,const int&);
-extern "C" float type_of_call hij(const int&,const int&,const int&);
-extern "C" float type_of_call hije(const int&,const int&,const int&);
-
-extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR ,const int,const int);
-
-extern "C" void  type_of_call zitoh(const int&,const int&,const int&);
-extern "C" void  type_of_call uhtoc(const int&,const int&,DEFCHAR,int&,const int);
+extern "C" void  hlimit(const int&);
+extern "C" void  hropen(const int&,DEFCHAR,DEFCHAR,DEFCHAR,const int&,const int&,const int,const int,const int);
+extern "C" void  hrin(const int&,const int&,const int&);
+extern "C" void  hnoent(const int&,const int&);
+extern "C" void  hgive(const int&,DEFCHAR,const int&,const float&,const float&,
+		       const int&,const float&,const float&,const int&,const int&,const int);
+extern "C" void  hgiven(const int&,DEFCHAR,const int&,DEFCHAR,const float&,const float&,const int,const int);
+extern "C" void  hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&,const int,const int, const int);
+extern "C" void  hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&,const int, const int);
+extern "C" void  hgnpar(const int&,const char *,const int);
+extern "C" void  hgnf(const int&,const int&,const float&,const int&);
+extern "C" void  hgnt(const int&,const int&,const int&);
+extern "C" void  rzink(const int&,const int&,const char *,const int);
+extern "C" void  hdcofl();
+extern "C" void  hdelet(const int&);
+extern "C" void  hix(const int&,const int&,const float&);
+extern "C" void  hijxy(const int&,const int&,const int&,const float&,const float&);
+extern "C" void  hlimap(const int&,const char*, const int); /* Nobu added */
+extern "C" void  hidall(const int*, const int&); /* Nobu added */
+extern "C" void  hrin2(const int&,const int&,const int&); /* nobu added */
+extern "C" float hi(const int&,const int&);
+extern "C" float hie(const int&,const int&);
+extern "C" float hif(const int&,const int&);
+extern "C" float hij(const int&,const int&,const int&);
+extern "C" float hije(const int&,const int&,const int&);
+extern "C" void  hcdir(DEFCHAR,DEFCHAR ,const int,const int);
+extern "C" void  zitoh(const int&,const int&,const int&);
+extern "C" void  uhtoc(const int&,const int&,DEFCHAR,int&,const int);
 
 extern void convert_directory(const char*);
 extern void convert_1d(Int_t id);
@@ -212,7 +197,6 @@ int main(int argc, char **argv)
 #if defined(_HIUX_SOURCE) && !defined(__GNUC__)
    hf_fint((char *)NULL);
 #endif
-
 
    int pawc_size = PAWC_SIZE;
    hlimit(pawc_size);
@@ -442,8 +426,8 @@ void convert_directory(const char *dir)
       newdir->cd();
       convert_directory(chdir);
       hcdir(PASSCHAR("\\"),PASSCHAR(" "),1,1);
-   /* To avoid memory leak, newdir may NOT be written and deleted here */
-   /*   newdir->Write(); */
+      /* To avoid memory leak, newdir may NOT be written and deleted here */
+      /*   newdir->Write(); */
       cursav->cd();
    }
 }
@@ -451,7 +435,7 @@ void convert_directory(const char *dir)
 /* ____________________________________________________________________________ */
 void convert_1d(Int_t id)
 {
-  /* convert 1d histogram */
+   /* convert 1d histogram */
    if (id > 0) snprintf(idname,128,"h%d",id);
    else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
@@ -512,7 +496,7 @@ void convert_1d(Int_t id)
 /* ____________________________________________________________________________ */
 void convert_2d(Int_t id)
 {
-  /* convert 2d histogram */
+   /* convert 2d histogram */
    if (id > 0) snprintf(idname,128,"h%d",id);
    else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
@@ -555,11 +539,11 @@ void convert_2d(Int_t id)
 //____________________________________________________________________________
 void convert_profile(Int_t id)
 {
-  /* the following structure is used in Hbook
-    lcid points to the profile in array iq
-    lcont = lq(lcid-1)
-    lw    = lq(lcont)
-    ln    = lq(lw)
+   /* the following structure is used in Hbook
+      lcid points to the profile in array iq
+      lcont = lq(lcid-1)
+      lw    = lq(lcont)
+      ln    = lq(lw)
       if option S jbyt(iq(lw),1,2) = 1
       if option I jbyt(iq(lw),1,2) = 2 */
 
@@ -652,7 +636,7 @@ void convert_rwn(Int_t id)
 /* ____________________________________________________________________________ */
 void convert_cwn(Int_t id)
 {
-  /* convert column wise ntuple */
+   /* convert column wise ntuple */
    const int kNchar=9;
    int nvar;
    int ier=0;
