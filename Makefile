@@ -27,4 +27,4 @@ shm_monitor: shm_monitor.o hlimap.o hidall.o mzwork.o hcreatem.o hshm.o hmapm.o 
 	$(FC)      $(FFLAGS)   -c $<
 .PHONY : clean
 clean:
-	rm -rf *.o
+	rm -rf *.o $(TARGETS)
