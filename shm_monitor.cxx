@@ -1,28 +1,28 @@
-// @(#)root/main:$Id$
-// Author: Rene Brun   20/09/96
-/////////////////////////////////////////////////////////////////////////
-//      Program to convert an HBOOK in the shared memoty into a ROOT file
-//                      Author: Rene Brun
-//
-//  This program is invoked via:
-//     s2root shared_memory_name root_file_name  compress tolower
-//  if the second parameter root_file_name is missing the name will be
-//  automatically generated from the hbook file name. Example:
-//       s2root SHMN
-//     is identical to
-//       s2root SHMN SHMN.root
-//  if compress is missing (or = 1)the ROOT file will be compressed
-//  if compress = 0 the ROOT file will not be compressed.
-//  if tolower is missing (or = 1) ntuple column names are converted to lower case
-//                but the first character is converted to upper case.
-//  if tolower = 2 same as tolower=1 except that the first character is also
-//                convertex to lower case
-/////////////////////////////////////////////////////////////////////////
-//
-// Modified by Nobu on Jan. 28, 2018
-// Version 1.0 08-May-2020 Nobu Kobayashi
-//
-/////////////////////////////////////////////////////////////////////////
+/* ---------------------------------------------------------------------------------
+   
+   Web online monitor to show an HBOOK in shared memory
+   
+   This program is invoked via:
+   shm_monitor port [shm_list] [compress] [tolower] [lrecl] [bufsize] [optcwn]
+   i.e., shm_monitor 8080 TEST,FRED
+   
+   port     = port number for THttpServer
+   shm_list = List of names of the shared memory. This should be
+              separated by comma with no space. If no value is given,
+	      all shared memories will be read.
+   compress = 1 by default (use 0 for no compression)
+   tolower  = 1 by default (use 0 to keep case of column names)
+   lrecl    = 0 by default (must be specified if >8092)
+   bufsize  = 8000 by default (branch buffer size)
+              for cwn ntuple only: optcwn  = 1 (default)  1-byte int -> char,
+	      2-byte int -> short, (use 0 to keep 4-byte int)
+
+   N.B. The source code originate from h2root.cxx
+   
+   Version 1.0 08-May-2020 Nobu Kobayashi
+   Version 1.1 26-Jun-2020 Nobu Kobayashi
+   
+   ---------------------------------------------------------------------------------- */
 
 #include <stdlib.h>
 #include <string.h>
@@ -50,11 +50,10 @@
 #include "TString.h"
 #include "TStyle.h"
 
-//  Define the names of the Fortran common blocks for the different OSs
-// Note that with gcc3.4 or above the size of PAWC_SIZE must be the same 
-// as in the Fortran definition in hbook.f and zebra
-// Also, the arrays must be declared extern like on Windows
-#ifndef WIN32
+/*  Define the names of the Fortran common blocks for the different OSs
+    Note that with gcc3.4 or above the size of PAWC_SIZE must be the same 
+    as in the Fortran definition in hbook.f and zebra
+    Also, the arrays must be declared extern like on Windows */
 #define PAWC_SIZE 32000000
 #  define bigbuf bigbuf_
 #  define pawc pawc_
@@ -62,33 +61,12 @@
 #  define hcbits hcbits_
 #  define hcbook hcbook_
 #  define rzcl rzcl_
-//int pawc[PAWC_SIZE];
-//int quest[100];
-//int hcbits[37];
-//int hcbook[51];
-//int rzcl[11];
 extern "C" char bigbuf[PAWC_SIZE];
 extern "C" int pawc[PAWC_SIZE];
 extern "C" int quest[100];
 extern "C" int hcbits[37];
 extern "C" int hcbook[51];
 extern "C" int rzcl[11];
-#else
-// on windows /pawc/ must have the same length as in libPacklib.a !!
-#define PAWC_SIZE 32000000
-#  define bigbuf BIGBUF
-#  define pawc   PAWC
-#  define quest  QUEST
-#  define hcbits HCBITS
-#  define hcbook HCBOOK
-#  define rzcl   RZCL
-extern "C" int bigbuf[PAWC_SIZE];
-extern "C" int pawc[PAWC_SIZE];
-extern "C" int quest[100];
-extern "C" int hcbits[37];
-extern "C" int hcbook[51];
-extern "C" int rzcl[11];
-#endif
 
 int *iq, *lq;
 float *q;
@@ -101,16 +79,8 @@ float xmin,xmax,ymin,ymax;
 const Int_t kMIN1 = 7;
 const Int_t kMAX1 = 8;
 
-#if defined __linux
-//On linux Fortran wants this, so we give to it!
-int xargv=0;
-int xargc=0;
-void MAIN__() {}
-#endif
+/*  Define the names of the Fortran subroutine and functions for the different OSs*/
 
-//  Define the names of the Fortran subroutine and functions for the different OSs
-
-#ifndef WIN32
 # define hlimit  hlimit_
 # define hropen  hropen_
 # define hrin    hrin_
@@ -141,86 +111,29 @@ void MAIN__() {}
 # define zitoh   zitoh_
 # define uhtoc   uhtoc_
 
-# define hlimap  hlimap_ // nobu added
-# define hidall  hidall_ // nobu added
-# define hrin2   hrin2_ // nobu added
+# define hlimap  hlimap_ /* nobu added */
+# define hidall  hidall_ /* nobu added */
+# define hrin2   hrin2_ /* nobu added */
 
 # define type_of_call
 # define DEFCHAR  const char*
 # define PASSCHAR(string) string
-#else
-# define hlimit  HLIMIT
-# define hropen  HROPEN
-# define hrin    HRIN
-# define hnoent  HNOENT
-# define hgive   HGIVE
-# define hgiven  HGIVEN
-# define hprntu  HPRNTU
-# define hgnpar  HGNPAR
-# define hgnf    HGNF
-# define hgnt    HGNT
-# define rzink   RZINK
-# define hdcofl  HDCOFL
-# define hmaxim  HMAXIM
-# define hminim  HMINIM
-# define hdelet  HDELET
-# define hntvar2 HNTVAR2
-# define hbname  HBNAME
-# define hbnamc  HBNAMC
-# define hbnam   HBNAM
-# define hi      HI
-# define hie     HIE
-# define hif     HIF
-# define hij     HIJ
-# define hix     HIX
-# define hijxy   HIJXY
-# define hije    HIJE
-# define hcdir   HCDIR
-# define zitoh   ZITOH
-# define uhtoc   UHTOC
-# define type_of_call  _stdcall
-# define DEFCHAR  const char*, const int
-# define PASSCHAR(string) string, strlen(string)
-#endif
 
 extern "C" void  type_of_call hlimit(const int&);
-#ifndef WIN32
 extern "C" void  type_of_call hropen(const int&,DEFCHAR,DEFCHAR,DEFCHAR,
                         const int&,const int&,const int,const int,const int);
-#else
-extern "C" void  type_of_call hropen(const int&,DEFCHAR,DEFCHAR,DEFCHAR,
-                        const int&,const int&);
-#endif
 
 extern "C" void  type_of_call hrin(const int&,const int&,const int&);
 extern "C" void  type_of_call hnoent(const int&,const int&);
-#ifndef WIN32
 extern "C" void  type_of_call hgive(const int&,DEFCHAR,const int&,const float&,const float&,
    const int&,const float&,const float&,const int&,const int&,const int);
-#else
-extern "C" void  type_of_call hgive(const int&,DEFCHAR,const int&,const float&,const float&,
-   const int&,const float&,const float&,const int&,const int&);
-#endif
 
-#ifndef WIN32
 extern "C" void  type_of_call hgiven(const int&,DEFCHAR,const int&,DEFCHAR,
    const float&,const float&,const int,const int);
-#else
-extern "C" void  type_of_call hgiven(const int&,DEFCHAR,const int&,DEFCHAR,
-   const float&,const float&);
-#endif
 
-#ifndef WIN32
 extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&,const int,const int, const int);
-#else
-extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&);
-#endif
 
-#ifndef WIN32
 extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&,const int, const int);
-#else
-extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&);
-#endif
 
 extern "C" void  type_of_call hprntu(const int&);
 extern "C" void  type_of_call hgnpar(const int&,const char *,const int);
@@ -234,36 +147,20 @@ extern "C" void  type_of_call hdelet(const int&);
 extern "C" void  type_of_call hix(const int&,const int&,const float&);
 extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
 
-extern "C" void  type_of_call hlimap(const int&,const char*, const int); // Nobu added
-extern "C" void  type_of_call hidall(const int*, const int&); // Nobu added
-extern "C" void  type_of_call hrin2(const int&,const int&,const int&); // nobu added
+extern "C" void  type_of_call hlimap(const int&,const char*, const int); /* Nobu added */
+extern "C" void  type_of_call hidall(const int*, const int&); /* Nobu added */
+extern "C" void  type_of_call hrin2(const int&,const int&,const int&); /* nobu added */
 
-#ifndef R__B64BUG
 extern "C" float type_of_call hi(const int&,const int&);
 extern "C" float type_of_call hie(const int&,const int&);
 extern "C" float type_of_call hif(const int&,const int&);
 extern "C" float type_of_call hij(const int&,const int&,const int&);
 extern "C" float type_of_call hije(const int&,const int&,const int&);
-#else
-extern "C" double type_of_call hi(const int&,const int&);
-extern "C" double type_of_call hie(const int&,const int&);
-extern "C" double type_of_call hif(const int&,const int&);
-extern "C" double type_of_call hij(const int&,const int&,const int&);
-extern "C" double type_of_call hije(const int&,const int&,const int&);
-#endif
 
-#ifndef WIN32
 extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR ,const int,const int);
-#else
-extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR);
-#endif
 
 extern "C" void  type_of_call zitoh(const int&,const int&,const int&);
-#ifndef WIN32
 extern "C" void  type_of_call uhtoc(const int&,const int&,DEFCHAR,int&,const int);
-#else
-extern "C" void  type_of_call uhtoc(const int&,const int&,DEFCHAR,int&);
-#endif
 
 extern void convert_directory(const char*);
 extern void convert_1d(Int_t id);
@@ -277,7 +174,6 @@ Int_t bufsize  = 64000;
 Int_t optcwn = 1;
 int main(int argc, char **argv)
 {
-   //Program to convert an HBOOK in shm into a ROOT file
    if (argc < 2) {
       printf("******Error in invoking shm_monitor\n");
       printf("===>  shm_monitor port [shm_name_list] [compress] [tolower] [lrecl] [bufsize] [optcwn] \n");
@@ -363,7 +259,7 @@ int main(int argc, char **argv)
      std::cout << std::endl;
    }
 
-   // http server with port, use jobname as top-folder name
+   /* http server with port, use jobname as top-folder name */
    TString thttpserver_str;
    if (all_read_flag == 1) {
      thttpserver_str = Form("http:%d?top=job_all_pid%d_at_%s", port, gSystem->GetPid(), gSystem->HostName());
@@ -385,7 +281,7 @@ int main(int argc, char **argv)
    }
    
    THttpServer* serv = new THttpServer(thttpserver_str.Data());
-   // when read-only mode disabled one could execute object methods like TTree::Draw()
+   /* when read-only mode disabled one could execute object methods like TTree::Draw() */
    serv->SetReadOnly(kFALSE);
    
    TMemFile *transient = 0;
@@ -452,10 +348,10 @@ int main(int argc, char **argv)
    return 0;
 }
 
-//____________________________________________________________________________
+/* ____________________________________________________________________________ */
 void convert_directory(const char *dir)
 {
-   //convert a directory
+  /* convert a directory */
   /* Nobu c/o 2020/04/29
     printf(" Converting directory %s\n",dir); */
      
@@ -497,7 +393,7 @@ void convert_directory(const char *dir)
       hrin2(id,i999,0);
       if (quest[0]) {
          printf("Error cannot read ID = %d\n",id);
-         //break;
+         /* break; */
       }
       hdcofl();
       lcid  = hcbook[10];
@@ -524,7 +420,7 @@ void convert_directory(const char *dir)
       }
    }
 
-// converting subdirectories of this directory
+   /* converting subdirectories of this directory */
    const Int_t kKLS = 26;
    const Int_t kKNSD = 23;
    lcdir = rzcl[2];
@@ -541,12 +437,8 @@ void convert_directory(const char *dir)
       lcdir = rzcl[2];
       zitoh(iq[lcdir+ls+7*k],ihdir[0],ncw);
       for (i=0;i<17;i++) chdir[i] = 0;
-#ifndef WIN32
       uhtoc(ihdir[0],ncw,chdir,nch ,16);
-#else
-      uhtoc(ihdir[0],ncw,chdir,16,nch);
-#endif
-      //do not process directory names containing a slash
+      /* do not process directory names containing a slash */
       if (strchr(chdir,'/')) {
          printf("Sorry cannot convert directory name %s because it contains a slash\n",chdir);
          continue;
@@ -557,37 +449,25 @@ void convert_directory(const char *dir)
          if (chdir[i] != ' ') break;
          chdir[i] = 0;
       }
-#ifndef WIN32
       hcdir(PASSCHAR(hbookdir),PASSCHAR(" "),16,1);
-#else
-      hcdir(PASSCHAR(hbookdir),PASSCHAR(" "));
-#endif
       TDirectoryFile *newdir = new TDirectoryFile(chdir,chdir);
       newdir->cd();
       convert_directory(chdir);
-#ifndef WIN32
       hcdir(PASSCHAR("\\"),PASSCHAR(" "),1,1);
-#else
-      hcdir(PASSCHAR("\\"),PASSCHAR(" "));
-#endif
    /* To avoid memory leak, newdir may NOT be written and deleted here */
    /*   newdir->Write(); */
       cursav->cd();
    }
 }
 
-//____________________________________________________________________________
+/* ____________________________________________________________________________ */
 void convert_1d(Int_t id)
 {
-   //convert 1d histogram
+  /* convert 1d histogram */
    if (id > 0) snprintf(idname,128,"h%d",id);
    else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
-#ifndef WIN32
    hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
-#else
-   hgive(id,chtitl,80,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
-#endif
    chtitl[4*nwt] = 0;
    TH1F *h1;
    Int_t i;
@@ -641,18 +521,14 @@ void convert_1d(Int_t id)
    /* delete h1;*/
 }
 
-//____________________________________________________________________________
+/* ____________________________________________________________________________ */
 void convert_2d(Int_t id)
 {
-   //convert 2d histogram
+  /* convert 2d histogram */
    if (id > 0) snprintf(idname,128,"h%d",id);
    else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
-#ifndef WIN32
    hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
-#else
-   hgive(id,chtitl,80,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
-#endif
    chtitl[4*nwt] = 0;
    /* Nobu added May 9, 2020*/
    /* TH2F *h2 = new TH2F(idname,chtitl,ncx,xmin,xmax,ncy,ymin,ymax); */
@@ -691,24 +567,20 @@ void convert_2d(Int_t id)
 //____________________________________________________________________________
 void convert_profile(Int_t id)
 {
-// the following structure is used in Hbook
-//    lcid points to the profile in array iq
-//    lcont = lq(lcid-1)
-//    lw    = lq(lcont)
-//    ln    = lq(lw)
-//      if option S jbyt(iq(lw),1,2) = 1
-//      if option I jbyt(iq(lw),1,2) = 2
+  /* the following structure is used in Hbook
+    lcid points to the profile in array iq
+    lcont = lq(lcid-1)
+    lw    = lq(lcont)
+    ln    = lq(lw)
+      if option S jbyt(iq(lw),1,2) = 1
+      if option I jbyt(iq(lw),1,2) = 2 */
 
    if (id > 0) snprintf(idname,128,"h%d",id);
    else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
    Int_t lw = lq[lcont];
    Int_t ln = lq[lw];
-#ifndef WIN32
    hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
-#else
-   hgive(id,chtitl,80,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
-#endif
    chtitl[4*nwt] = 0;
    const char *option= " ";
    if (iq[lw] == 1) option = "S";
@@ -730,10 +602,10 @@ void convert_profile(Int_t id)
    delete p;
 }
 
-//____________________________________________________________________________
+/* ____________________________________________________________________________ */
 void convert_rwn(Int_t id)
 {
-   //convert row wise ntuple
+   /* convert row wise ntuple */
    const int kNchar=9;
    int nvar;
    int ier=0;
@@ -747,22 +619,14 @@ void convert_rwn(Int_t id)
    hnoent(id,nentries);
    printf(" Converting RWN with ID= %d, nentries = %d\n",id,nentries);
    nvar=0;
-#ifndef WIN32
    hgiven(id,chtitl,nvar,PASSCHAR(""),rmin[0],rmax[0],80,0);
-#else
-   hgiven(id,chtitl,80,nvar,PASSCHAR(""),rmin[0],rmax[0]);
-#endif
 
    chtag_out = new char[nvar*kNchar+1];
    x = new float[nvar];
 
    chtag_out[nvar*kNchar]=0;
    for (i=0;i<80;i++)chtitl[i]=0;
-#ifndef WIN32
    hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,kNchar);
-#else
-   hgiven(id,chtitl,80,nvar,chtag_out,kNchar,rmin[0],rmax[0]);
-#endif
    hgnpar(id,"?",1);
    char *name = chtag_out;
    for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
@@ -771,7 +635,7 @@ void convert_rwn(Int_t id)
    for(i=0; i<nvar;i++) {
       name[kNchar-1] = 0;
       first = last = 0;
-      // suppress traling blanks
+      /* suppress traling blanks */
       for (j=kNchar-2;j>0;j--) {
          if(golower) name[j] = tolower(name[j]);
          if (name[j] == ' ' && last == 0) name[j] = 0;
@@ -779,7 +643,7 @@ void convert_rwn(Int_t id)
       }
       if (golower == 2) name[0] = tolower(name[0]);
 
-      // suppress heading blanks
+      /* suppress heading blanks */
       for (j=0;j<kNchar;j++) {
          if (name[j] != ' ') break;
          first = j+1;
@@ -797,10 +661,10 @@ void convert_rwn(Int_t id)
    delete [] chtag_out;
 }
 
-//____________________________________________________________________________
+/* ____________________________________________________________________________ */
 void convert_cwn(Int_t id)
 {
-   //convert column wise ntuple
+  /* convert column wise ntuple */
    const int kNchar=9;
    int nvar;
    int ier=0;
@@ -815,11 +679,7 @@ void convert_cwn(Int_t id)
    hnoent(id,nentries);
    printf(" Converting CWN with ID= %d, nentries = %d\n",id,nentries);
    nvar=0;
-#ifndef WIN32
    hgiven(id,chtitl,nvar,PASSCHAR(""),rmin[0],rmax[0],80,0);
-#else
-   hgiven(id,chtitl,80,nvar,PASSCHAR(""),rmin[0],rmax[0]);
-#endif
 
 
    chtag_out = new char[nvar*kNchar+1];
@@ -832,17 +692,9 @@ void convert_cwn(Int_t id)
 
    chtag_out[nvar*kNchar]=0;
    for (i=0;i<80;i++)chtitl[i]=0;
-#ifndef WIN32
    hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,kNchar);
-#else
-   hgiven(id,chtitl,80,nvar,chtag_out,kNchar,rmin[0],rmax[0]);
-#endif
    Long_t add= (Long_t)&bigbuf[0];
-#ifndef WIN32
    hbnam(id,PASSCHAR(" "),add,PASSCHAR("$CLEAR"),0,1,6);
-#else
-   hbnam(id,PASSCHAR(" "),add,PASSCHAR("$CLEAR"),0);
-#endif
 
    Int_t bufpos = 0;
    Int_t isachar = 0;
@@ -863,11 +715,7 @@ void convert_cwn(Int_t id)
       block[sizeof(block)-1] = 0;
       memset(fullname,' ',sizeof(fullname));
       fullname[sizeof(fullname)-1]=0;
-#ifndef WIN32
       hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,512,1024,512);
-#else
-      hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem);
-#endif
 
       for (j=510;j>0;j--) {
          if(golower) name[j] = tolower(name[j]);
@@ -877,11 +725,11 @@ void convert_cwn(Int_t id)
 
       for (j=1022;j>0;j--) {
          if(golower && fullname[j-1] != '[') fullname[j] = tolower(fullname[j]);
-         // convert also character after [, if golower == 2
+         /* convert also character after [, if golower == 2 */
          if (golower == 2) fullname[j] = tolower(fullname[j]);
          if (fullname[j] == ' ') fullname[j] = 0;
       }
-      // convert also first character, if golower == 2
+      /* convert also first character, if golower == 2 */
       if (golower == 2) fullname[0] = tolower(fullname[0]);
       for (j=510;j>0;j--) {
          if (block[j] == ' ') block[j] = 0;
@@ -893,8 +741,8 @@ void convert_cwn(Int_t id)
       }
 
 
-      // add support for 1-byte (Char_t) and 2-byte (Short_t) integers
-      // Int_t nBytesUsed = 4; // default for integers
+      /* add support for 1-byte (Char_t) and 2-byte (Short_t) integers
+	 Int_t nBytesUsed = 4; // default for integers */
 
       if( itype == 2 ) {
          if( optcwn == 1 ) {
@@ -903,10 +751,10 @@ void convert_cwn(Int_t id)
             } else {
                if( nbits > 8 ) {
                   strlcat(fullname,"/S",1024);
-                  //nBytesUsed = 2;
+                  /* nBytesUsed = 2; */
                } else {
                   strlcat(fullname,"/B",1024);
-                  //nBytesUsed = 1;
+                  /* nBytesUsed = 1; */
                }
             }
          } else {
@@ -914,7 +762,7 @@ void convert_cwn(Int_t id)
          }
       }
 
-      // add support for 1-byte (UChar_t) and 2-byte (UShort_t) integers
+      /* add support for 1-byte (UChar_t) and 2-byte (UShort_t) integers */
       if ( itype == 3 ) {
          if(  optcwn == 1 ) {
             if( nbits > 16) {
@@ -922,10 +770,10 @@ void convert_cwn(Int_t id)
             } else {
                if( nbits > 8 ) {
                   strlcat(fullname,"/s",1024);
-                  //nBytesUsed = 2;
+                  /* nBytesUsed = 2; */
                } else {
                   strlcat(fullname,"/b",1024);
-                  //nBytesUsed = 1;
+                  /* nBytesUsed = 1; */
                }
             }
          } else {
@@ -936,7 +784,7 @@ void convert_cwn(Int_t id)
 
 
 
-//     if (itype == 4) strlcat(fullname,"/i",1024);
+      /*     if (itype == 4) strlcat(fullname,"/i",1024); */
       if (itype == 4) strlcat(fullname,"/b",1024);
       if (itype == 5) strlcat(fullname,"/C",1024);
       printf("Creating branch:%s, block:%s, fullname:%s, nsub=%d, itype=%d, isize=%d, ielem=%d\n",name,block,fullname,nsub,itype,isize,ielem);
@@ -948,12 +796,7 @@ void convert_cwn(Int_t id)
          oldischar = ischar;
          Int_t lblock   = strlen(block);
          add= (Long_t)&bigbuf[bufpos];
-#ifndef WIN32
          hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);
-#else
-         hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar);
-#endif
-
       }
       TBranch *branch = tree->Branch(name,(void*)&bigbuf[bufpos],fullname,bufsize);
       boolflag[i] = -10;
@@ -972,7 +815,7 @@ void convert_cwn(Int_t id)
    Int_t cf,l;
    for(i=1;i<=nentries;i++) {
       hgnt(id,i,ier);
-      if (isabool) { // if column is boolean
+      if (isabool) { /* if column is boolean */
          for (j=0;j<nvar;j++) {
             cf = boolflag[j];
             if (cf >-1) {
@@ -987,7 +830,7 @@ void convert_cwn(Int_t id)
             }
          }
       }
-      if (isachar) { // if column is character, set terminator
+      if (isachar) { /* if column is character, set terminator */
          for (j=0;j<nvar;j++) {
             cf = charflag[j];
             if (cf) {
@@ -1000,21 +843,17 @@ void convert_cwn(Int_t id)
          }
       }
 
-      // if optimizing cwn ntuple then look up bufpos and adjust integers to be shorts or chars
+      /* if optimizing cwn ntuple then look up bufpos and adjust integers to be shorts or chars */
       if(  optcwn == 1 ) {
          bufpos = 0;
          for(int k=0; k<nvar;k++) {
-#ifndef WIN32
             hntvar2(id,k+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,32,64,32);
-#else
-            hntvar2(id,k+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem);
-#endif
 
-            Int_t nBytesUsed = 4; // default for integers
+            Int_t nBytesUsed = 4; /* default for integers */
 
             if ( itype == 2 || itype == 3) {
                if( nbits > 16) {
-                    // do nothing for integers of 4 byte
+		 /* do nothing for integers of 4 byte */
                } else {
                   if( nbits > 8 ) nBytesUsed = 2;
                   else            nBytesUsed = 1;
@@ -1023,13 +862,13 @@ void convert_cwn(Int_t id)
 
             if(nBytesUsed == 1) {
                for(Int_t index = 0; index < ielem; index++) {
-                  // shift all chars with data to be one after another
+		 /* shift all chars with data to be one after another */
                   bigbuf[bufpos + index*nBytesUsed ] =  bigbuf[bufpos + index * isize];
                }
             } else {
                if(nBytesUsed == 2) {
                   for(Int_t index = 0; index < ielem; index++) {
-                     // shift all shorts ( 2 chars) with data to be one after another
+		    /* shift all shorts ( 2 chars) with data to be one after another */
                      bigbuf[bufpos + index*nBytesUsed ] =  bigbuf[bufpos + index * isize];
                      bigbuf[bufpos + index*nBytesUsed+1 ] =  bigbuf[bufpos + index * isize+1];
                   }
