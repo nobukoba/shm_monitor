@@ -194,10 +194,6 @@ int main(int argc, char **argv)
    }
    port = atoi(argv[1]);
 
-#if defined(_HIUX_SOURCE) && !defined(__GNUC__)
-   hf_fint((char *)NULL);
-#endif
-
    int pawc_size = PAWC_SIZE;
    hlimit(pawc_size);
 
