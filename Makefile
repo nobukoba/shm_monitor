@@ -12,7 +12,7 @@ CXX       = g++ $(PIEFLAGS)
 FC        = gfortran $(PIEFLAGS)
 CFLAGS    = 
 CXXFLAGS  = $(shell root-config --cflags)
-FFLAGS    = -std=legacy
+FFLAGS    = -std=legacy -Wno-argument-mismatch
 LFLAGS    = 
 ROOTLIBS  = $(shell root-config --libs) -lRHTTP -lgfortran
 
