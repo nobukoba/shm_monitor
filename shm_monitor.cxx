@@ -32,6 +32,7 @@
 #include <string> /* Nobu 2020/05/10 4:31AM */
 
 #include "Riostream.h"
+#include "TROOT.h"
 #include "TFile.h"
 #include "TDirectoryFile.h"
 #include "TTree.h"
@@ -306,18 +307,14 @@ int main(int argc, char **argv)
        transient->ls();
      }
      if(file_list.GetEntries()==0) {
-       transient = new TMemFile("No_shared_memory","RECREATE","No_shared_memory");
-       if (!transient) {
-	 printf("Error: can't open the TMemFile with No_shared_memory\n");
-	 return 1;
-       }
-       /* transient->Write(); Not needed, but why? Nobu 20201206 */
+       TNamed *nam = new TNamed("No_shared_memory","No_shared_memory");
+       gROOT->Add(nam);
+       gROOT->ls();
        if (gSystem->ProcessEvents()) {
 	 printf("Error: gSystem->ProcessEvents() is null\n");
 	 return 1;
        }
-       transient->ls();
-       delete transient;
+       delete nam;
      }
      TIter next3(&file_list);
      while ((transient = (TMemFile*)next3())){
