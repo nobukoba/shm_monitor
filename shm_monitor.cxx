@@ -256,6 +256,7 @@ int main(int argc, char **argv)
    TList file_list;
    TList file_name_list;
    TObjString * ostr2;
+
    while (1){
      if(all_read_flag == 1){
        shm_name_list.Delete();
@@ -303,6 +304,20 @@ int main(int argc, char **argv)
 	 return 1;
        }
        transient->ls();
+     }
+     if(file_list.GetEntries()==0) {
+       transient = new TMemFile("No_shared_memory","RECREATE","No_shared_memory");
+       if (!transient) {
+	 printf("Error: can't open the TMemFile with No_shared_memory\n");
+	 return 1;
+       }
+       /* transient->Write(); Not needed, but why? Nobu 20201206 */
+       if (gSystem->ProcessEvents()) {
+	 printf("Error: gSystem->ProcessEvents() is null\n");
+	 return 1;
+       }
+       transient->ls();
+       delete transient;
      }
      TIter next3(&file_list);
      while ((transient = (TMemFile*)next3())){
