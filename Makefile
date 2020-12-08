@@ -11,10 +11,10 @@ CC        = gcc $(PIEFLAGS)
 CXX       = g++ $(PIEFLAGS)
 FC        = gfortran $(PIEFLAGS)
 CFLAGS    = 
-CXXFLAGS  = $(shell root-config --cflags)
 FFLAGS    = -std=legacy -Wno-argument-mismatch
 LFLAGS    = 
-ROOTLIBS  = $(shell root-config --libs) -lRHTTP -lgfortran
+CXXFLAGS  = $(shell /home/kobayash/cern/root_v6.20.04_rpath/bin/root-config --cflags)
+ROOTLIBS  = $(shell /home/kobayash/cern/root_v6.20.04_rpath/bin/root-config --libs) -lRHTTP -lgfortran
 
 all:	$(TARGETS)
 shm_monitor: shm_monitor.o hlimap.o hidall.o mzwork.o hcreatem.o hshm.o hmapm.o hrin2.o hcopyu.o hcopyn.o hcopyt.o zebra.o hbook.o cernlib.o kernlib.o

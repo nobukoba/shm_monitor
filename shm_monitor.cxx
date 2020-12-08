@@ -31,6 +31,7 @@
 #include <sstream> /* Nobu 2020/05/10 4:31AM */
 #include <string> /* Nobu 2020/05/10 4:31AM */
 
+#include "TSystem.h"
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TFile.h"
@@ -152,7 +153,9 @@ Int_t bufsize  = 64000;
 Int_t optcwn = 1;
 int main(int argc, char **argv)
 {
-   if (argc < 2) {
+  gSystem->Setenv("LD_LIBRARY_PATH",""); /* rpath is used for this program. If LD_LIBRARY_PATH is set, the other version of root lib will be loaded. */
+  
+  if (argc < 2) {
       printf("******Error in invoking shm_monitor\n");
       printf("===>  shm_monitor port [shm_name_list] [compress] [tolower] [lrecl] [bufsize] [optcwn] \n");
       printf("      i.e., shm_monitor 8080 TEST,FRED\n");
@@ -202,7 +205,7 @@ int main(int argc, char **argv)
    int lun = 10;
    hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier,7,strlen(file_in),2);
 --> End */
-
+      
    TString str_shm_names = shm_names;
    Int_t all_read_flag = 0;
    if (str_shm_names.Length() == 0) {
