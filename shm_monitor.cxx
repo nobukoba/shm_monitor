@@ -153,9 +153,9 @@ Int_t bufsize  = 64000;
 Int_t optcwn = 1;
 int main(int argc, char **argv)
 {
-  gSystem->Setenv("LD_LIBRARY_PATH",""); /* rpath is used for this program. If LD_LIBRARY_PATH is set, the other version of root lib will be loaded. */
+   gSystem->Setenv("LD_LIBRARY_PATH",""); /* rpath is used for this program. If LD_LIBRARY_PATH is set, the other version of root lib will be loaded. */
   
-  if (argc < 2) {
+   if (argc < 2) {
       printf("******Error in invoking shm_monitor\n");
       printf("===>  shm_monitor port [shm_name_list] [compress] [tolower] [lrecl] [bufsize] [optcwn] \n");
       printf("      i.e., shm_monitor 8080 TEST,FRED\n");
