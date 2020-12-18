@@ -50,6 +50,7 @@
 #include "THttpServer.h"
 #include "TServerSocket.h"
 #include "TString.h"
+#include "TObjString.h"
 #include "TStyle.h"
 
 /*  Define the names of the Fortran common blocks for the different OSs

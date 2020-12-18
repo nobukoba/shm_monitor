@@ -13,8 +13,14 @@ FC        = gfortran $(PIEFLAGS)
 CFLAGS    = 
 FFLAGS    = -std=legacy -Wno-argument-mismatch
 LFLAGS    = 
-CXXFLAGS  = $(shell /home/kobayash/cern/root_v6.20.04_rpath/bin/root-config --cflags)
-ROOTLIBS  = $(shell /home/kobayash/cern/root_v6.20.04_rpath/bin/root-config --libs) -lRHTTP -lgfortran
+HAS_RPATH = $(shell root-config --has-rpath)
+ifeq ($(HAS_RPATH),yes)
+CXXFLAGS  = $(shell root-config --cflags)
+ROOTLIBS  = $(shell root-config --libs) -lRHTTP -lgfortran
+else
+CXXFLAGS  = $(shell root-config --cflags)
+ROOTLIBS  = $(shell root-config --libs) -lRHTTP -lgfortran -Wl,-rpath,$(shell root-config --libdir) -Wl,--disable-new-dtags
+endif
 
 all:	$(TARGETS)
 shm_monitor: shm_monitor.o hlimap.o hidall.o mzwork.o hcreatem.o hshm.o hmapm.o hrin2.o hcopyu.o hcopyn.o hcopyt.o zebra.o hbook.o cernlib.o kernlib.o
