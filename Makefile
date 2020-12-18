@@ -13,13 +13,17 @@ FC        = gfortran $(PIEFLAGS)
 CFLAGS    = 
 FFLAGS    = -std=legacy -Wno-argument-mismatch
 LFLAGS    = 
-HAS_RPATH = $(shell root-config --has-rpath)
+# Explicit version of ROOT is used
+ROOTCONF  = /home/kobayash/cern/root_v6.22.06/bin/root-config
+# Present version of ROOT is used
+# ROOTCONF  = root-config
+HAS_RPATH = $(shell $(ROOTCONF) --has-rpath)
 ifeq ($(HAS_RPATH),yes)
-CXXFLAGS  = $(shell root-config --cflags)
-ROOTLIBS  = $(shell root-config --libs) -lRHTTP -lgfortran
+CXXFLAGS  = $(shell $(ROOTCONF) --cflags)
+ROOTLIBS  = $(shell $(ROOTCONF) --libs) -lRHTTP -lgfortran
 else
-CXXFLAGS  = $(shell root-config --cflags)
-ROOTLIBS  = $(shell root-config --libs) -lRHTTP -lgfortran -Wl,-rpath,$(shell root-config --libdir) -Wl,--disable-new-dtags
+CXXFLAGS  = $(shell $(ROOTCONF) --cflags)
+ROOTLIBS  = $(shell $(ROOTCONF) --libs) -lRHTTP -lgfortran -Wl,-rpath,$(shell $(ROOTCONF) --libdir) -Wl,--disable-new-dtags
 endif
 
 all:	$(TARGETS)
