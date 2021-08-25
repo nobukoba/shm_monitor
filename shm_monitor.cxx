@@ -456,21 +456,38 @@ void convert_1d(Int_t id)
    TH1F *h1;
    Int_t i;
    /* Nobu added May 9, 2020*/
-   TString idname_title = Form("%s; %s",idname,chtitl);
-   while (idname_title.EndsWith(" ")){
-     idname_title.Remove(TString::kTrailing, ' ');
+   TString chtitl_str = chtitl;
+   while (chtitl_str.EndsWith(" ")){
+     chtitl_str.Remove(TString::kTrailing, ' ');
    }
+   TString xtitle = "";
+   TString ytitle = "";
+   Int_t dlmpos = chtitl_str.First(";");
+   if (dlmpos > -1) {
+     xtitle = chtitl_str(dlmpos+1,chtitl_str.Length()-1);
+     chtitl_str = chtitl_str(0,dlmpos);
+   }
+   dlmpos = xtitle.First(";");
+   if (dlmpos > -1) {
+     ytitle = xtitle(dlmpos+1,xtitle.Length()-1);
+     xtitle = xtitle(0,dlmpos);
+   }
+   TString idname_title = Form("%s_%s",idname,chtitl_str.Data());
    if (hcbits[5]) {
       Int_t lbins = lq[lcid-2];
       Double_t *xbins = new Double_t[ncx+1];
       for (i=0;i<=ncx;i++) xbins[i] = q[lbins+i+1];
       /* h1 = new TH1F(idname,chtitl,ncx,xbins); */
-      h1 = new TH1F(idname_title.Data(),chtitl,ncx,xbins);
+      h1 = new TH1F(idname_title.Data(),chtitl_str.Data(),ncx,xbins);
       delete [] xbins;
    } else {
      /* h1 = new TH1F(idname,chtitl,ncx,xmin,xmax); */
-      h1 = new TH1F(idname_title.Data(),chtitl,ncx,xmin,xmax);
+      h1 = new TH1F(idname_title.Data(),chtitl_str.Data(),ncx,xmin,xmax);
    }
+   h1->GetXaxis()->CenterTitle();
+   h1->GetYaxis()->CenterTitle();
+   h1->GetXaxis()->SetTitle(xtitle.Data());
+   h1->GetYaxis()->SetTitle(ytitle.Data());
    if (hcbits[8]) h1->Sumw2();
    TGraph *gr = 0;
    if (hcbits[11]) {
@@ -516,11 +533,28 @@ void convert_2d(Int_t id)
    chtitl[4*nwt] = 0;
    /* Nobu added May 9, 2020*/
    /* TH2F *h2 = new TH2F(idname,chtitl,ncx,xmin,xmax,ncy,ymin,ymax); */
-   TString idname_title = Form("%s; %s",idname,chtitl);
-   while (idname_title.EndsWith(" ")){
-     idname_title.Remove(TString::kTrailing, ' ');
+   TString chtitl_str = chtitl;
+   while (chtitl_str.EndsWith(" ")){
+     chtitl_str.Remove(TString::kTrailing, ' ');
    }
-   TH2F *h2 = new TH2F(idname_title.Data(),chtitl,ncx,xmin,xmax,ncy,ymin,ymax);
+   TString xtitle = "";
+   TString ytitle = "";
+   Int_t dlmpos = chtitl_str.First(";");
+   if (dlmpos > -1) {
+     xtitle = chtitl_str(dlmpos+1,chtitl_str.Length()-1);
+     chtitl_str = chtitl_str(0,dlmpos);
+   }
+   dlmpos = xtitle.First(";");
+   if (dlmpos > -1) {
+     ytitle = xtitle(dlmpos+1,xtitle.Length()-1);
+     xtitle = xtitle(0,dlmpos);
+   }
+   TString idname_title = Form("%s_%s",idname,chtitl_str.Data());
+   TH2F *h2 = new TH2F(idname_title.Data(),chtitl_str.Data(),ncx,xmin,xmax,ncy,ymin,ymax);
+   h2->GetXaxis()->CenterTitle();
+   h2->GetYaxis()->CenterTitle();
+   h2->GetXaxis()->SetTitle(xtitle.Data());
+   h2->GetYaxis()->SetTitle(ytitle.Data());
    Float_t offsetx = 0.5*(xmax-xmin)/ncx;
    Float_t offsety = 0.5*(ymax-ymin)/ncy;
    Int_t lw = lq[lcont];
