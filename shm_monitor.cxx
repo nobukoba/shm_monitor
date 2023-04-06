@@ -1,912 +1,618 @@
-/* ---------------------------------------------------------------------------------
-   
-   Web online monitor to show an HBOOK in shared memory
-   
-   This program is invoked via:
-   shm_monitor port [shm_list] [compress] [tolower] [lrecl] [bufsize] [optcwn]
-   i.e., shm_monitor 8080 TEST,FRED
-   
-   port     = port number for THttpServer
-   shm_list = List of names of the shared memory. This should be
-              separated by comma with no space. If no value is given,
-	      all shared memories will be read.
-   compress = 1 by default (use 0 for no compression)
-   tolower  = 1 by default (use 0 to keep case of column names)
-   lrecl    = 0 by default (must be specified if >8092)
-   bufsize  = 8000 by default (branch buffer size)
-              for cwn ntuple only: optcwn  = 1 (default)  1-byte int -> char,
-	      2-byte int -> short, (use 0 to keep 4-byte int)
-
-   N.B. The source code originate from h2root.cxx
-   
-   Version 1.0 08-May-2020 Nobu Kobayashi
-   Version 1.1 26-Jun-2020 Nobu Kobayashi
-   
-   ---------------------------------------------------------------------------------- */
-
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdio.h> /* Nobu 2020/04/14 4:31AM */
-#include <sstream> /* Nobu 2020/05/10 4:31AM */
-#include <string> /* Nobu 2020/05/10 4:31AM */
-
-#include "TSystem.h"
-#include "Riostream.h"
+#include <iostream>
+#include <sstream>
 #include "TROOT.h"
 #include "TFile.h"
-#include "TDirectoryFile.h"
-#include "TTree.h"
-#include "TLeafI.h"
+#include "TList.h"
+#include "TDirectory.h"
 #include "TH1.h"
 #include "TH2.h"
-#include "TProfile.h"
+#include "TTree.h"
 #include "TGraph.h"
-#include "TMath.h"
-
-/* for shm_monitor */
-#include "TMemFile.h"
 #include "TSystem.h"
-#include "THttpServer.h"
-#include "TServerSocket.h"
 #include "TString.h"
-#include "TObjString.h"
-#include "TStyle.h"
+#include "TMemFile.h"
+#include "TSocket.h"
+#include "TServerSocket.h"
+#include "THttpServer.h"
 
-/*  Define the names of the Fortran common blocks for the different OSs
-    Note that with gcc3.4 or above the size of PAWC_SIZE must be the same 
-    as in the Fortran definition in hbook.f and zebra
-    Also, the arrays must be declared extern like on Windows */
 #define PAWC_SIZE 32000000
-#  define bigbuf bigbuf_
-#  define pawc pawc_
-#  define quest quest_
-#  define hcbits hcbits_
-#  define hcbook hcbook_
-#  define rzcl rzcl_
-extern "C" char bigbuf[PAWC_SIZE];
-extern "C" int pawc[PAWC_SIZE];
-extern "C" int quest[100];
-extern "C" int hcbits[37];
-extern "C" int hcbook[51];
-extern "C" int rzcl[11];
+extern "C" int pawc_[PAWC_SIZE];
+extern "C" int quest_[100];
+extern "C" int hcbits_[37];
+extern "C" int hcbook_[51];
+extern "C" int rzcl_[11];
+extern "C" int zebq_[104];
+extern "C" int mzcc_[411];
+extern "C" int bidon_[10006];
+extern "C" int mzcwk_[5120];
+extern "C" int fzcx_[71];
+extern "C" int fzci_[78];
 
-int *iq, *lq;
-float *q;
-char idname[128];
-int nentries;
-char chtitl[128];
-int ncx,ncy,nwt,idb;
-int lcont, lcid, lcdir;
-float xmin,xmax,ymin,ymax;
-const Int_t kMIN1 = 7;
-const Int_t kMAX1 = 8;
+extern "C" void  hlimit_(const int&);
+extern "C" void  hrin_(const int&,const int&,const int&);
+extern "C" void  hnoent_(const int&,const int&);
+extern "C" void  hgive_(const int&,const char*,const int&,const float&,const float&,const int&,const float&,const float&,const int&,const int&,const int);
+extern "C" void  hdelet_(const int&);
+extern "C" float hi_(const int&,const int&);
+extern "C" float hie_(const int&,const int&);
+extern "C" float hif_(const int&,const int&);
+extern "C" float hij_(const int&,const int&,const int&);
+extern "C" float hije_(const int&,const int&,const int&);
+extern "C" void  hcdir_(const char*,const char* ,const int,const int);
+/* --> Nobu added */
+extern "C" void  hlimap_(const int&,const char*, const int);
+extern "C" void  hidall_(const int*, const int&);
+extern "C" void  hdcofl_();
+extern "C" void  hsifla_(const int&,const int&);
+extern "C" void  hrdir_(const int&, char*,const int&,const int);
 
-/*  Define the names of the Fortran subroutine and functions for the different OSs*/
-# define hlimit  hlimit_
-# define hropen  hropen_
-# define hrin    hrin_
-# define hnoent  hnoent_
-# define hgive   hgive_
-# define hgiven  hgiven_
-# define hgnpar  hgnpar_
-# define hgnf    hgnf_
-# define hgnt    hgnt_
-# define rzink   rzink_
-# define hdcofl  hdcofl_
-# define hdelet  hdelet_
-# define hntvar2 hntvar2_
-# define hbnam   hbnam_
-# define hi      hi_
-# define hie     hie_
-# define hif     hif_
-# define hij     hij_
-# define hix     hix_
-# define hijxy   hijxy_
-# define hije    hije_
-# define hcdir   hcdir_
-# define zitoh   zitoh_
-# define uhtoc   uhtoc_
-# define hlimap  hlimap_ /* nobu added */
-# define hidall  hidall_ /* nobu added */
-# define hrin2   hrin2_ /* nobu added */
-# define DEFCHAR  const char*
-# define PASSCHAR(string) string
+int hbk_id_title_flag = 2;
+int shms2srv_sync_flag = 1;
 
-extern "C" void  hlimit(const int&);
-extern "C" void  hropen(const int&,DEFCHAR,DEFCHAR,DEFCHAR,const int&,const int&,const int,const int,const int);
-extern "C" void  hrin(const int&,const int&,const int&);
-extern "C" void  hnoent(const int&,const int&);
-extern "C" void  hgive(const int&,DEFCHAR,const int&,const float&,const float&,
-		       const int&,const float&,const float&,const int&,const int&,const int);
-extern "C" void  hgiven(const int&,DEFCHAR,const int&,DEFCHAR,const float&,const float&,const int,const int);
-extern "C" void  hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&,const int,const int, const int);
-extern "C" void  hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&,const int, const int);
-extern "C" void  hgnpar(const int&,const char *,const int);
-extern "C" void  hgnf(const int&,const int&,const float&,const int&);
-extern "C" void  hgnt(const int&,const int&,const int&);
-extern "C" void  rzink(const int&,const int&,const char *,const int);
-extern "C" void  hdcofl();
-extern "C" void  hdelet(const int&);
-extern "C" void  hix(const int&,const int&,const float&);
-extern "C" void  hijxy(const int&,const int&,const int&,const float&,const float&);
-extern "C" void  hlimap(const int&,const char*, const int); /* Nobu added */
-extern "C" void  hidall(const int*, const int&); /* Nobu added */
-extern "C" void  hrin2(const int&,const int&,const int&); /* nobu added */
-extern "C" float hi(const int&,const int&);
-extern "C" float hie(const int&,const int&);
-extern "C" float hif(const int&,const int&);
-extern "C" float hij(const int&,const int&,const int&);
-extern "C" float hije(const int&,const int&,const int&);
-extern "C" void  hcdir(DEFCHAR,DEFCHAR ,const int,const int);
-extern "C" void  zitoh(const int&,const int&,const int&);
-extern "C" void  uhtoc(const int&,const int&,DEFCHAR,int&,const int);
 
-extern void convert_directory(const char*);
-extern void convert_1d(Int_t id);
-extern void convert_2d(Int_t id);
-extern void convert_profile(Int_t id);
-extern void convert_cwn(Int_t id);
-extern void convert_rwn(Int_t id);
-
-Int_t golower  = 1;
-Int_t bufsize  = 64000;
-Int_t optcwn = 1;
-int main(int argc, char **argv)
-{
-   gSystem->Setenv("LD_LIBRARY_PATH",""); /* rpath is used for this program. If LD_LIBRARY_PATH is set, the other version of root lib will be loaded. */
-  
-   if (argc < 2) {
-      printf("******Error in invoking shm_monitor\n");
-      printf("===>  shm_monitor port [shm_name_list] [compress] [tolower] [lrecl] [bufsize] [optcwn] \n");
-      printf("      i.e., shm_monitor 8080 TEST,FRED\n");
-      printf("      port for THttpServer\n");
-      printf("      shm_name_list should be separated by comma with no space. If no value is given, all shared memories will be read.\n");
-      printf("      compress = 1 by default (use 0 for no compression)\n");
-      printf("      tolower  = 1 by default (use 0 to keep case of column names)\n");
-      printf("      lrecl =0 by default (must be specified if >8092)\n");
-      printf("      bufsize = 8000 by default (branch buffer size)\n");
-      printf("      for cwn ntuple only: optcwn  = 1 (default)  1-byte int -> char, 2-byte int -> short, (use 0 to keep 4-byte int) \n");
-      return 1;
-   }
-   lq = &pawc[9];
-   iq = &pawc[17];
-   void *qq = iq;
-   q = (float*)qq;
-
-   Int_t compress = 1;
-   int ier=0, record_size=0;
-   const char* shm_names = "";
-   Int_t  port = 8080;
-   
-   if (argc > 7) {
-      optcwn = atoi(argv[7]);
-   }
-   if (argc > 6) {
-      bufsize = atoi(argv[6]);
-   }
-   if (argc > 5) {
-      record_size = atoi(argv[5]);
-   }
-   if (argc > 4) {
-      golower = atoi(argv[4]);
-   }
-   if (argc > 3) {
-      compress = atoi(argv[3]);
-   }
-   if (argc > 2) {
-     shm_names = argv[2];
-   }
-   port = atoi(argv[1]);
-
-   int pawc_size = PAWC_SIZE;
-   hlimit(pawc_size);
-
-   /* c/o Nobu 2018/01/27 23:40:23 -->
-   int lun = 10;
-   hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier,7,strlen(file_in),2);
---> End */
-      
-   TString str_shm_names = shm_names;
-   Int_t all_read_flag = 0;
-   if (str_shm_names.Length() == 0) {
-     all_read_flag = 1;
-   }
-   TList shm_name_list;
-   if (all_read_flag == 0){
-     while(1){
-       Int_t pos = str_shm_names.First(',');
-       if(pos < 0){break;}
-       TString substr = str_shm_names(0,pos);
-       shm_name_list.Add(new TObjString(substr.Data()));
-       str_shm_names=str_shm_names(pos+1,str_shm_names.Length());
-     }
-     shm_name_list.Add(new TObjString(str_shm_names.Data()));
-
-     TIter next(&shm_name_list);
-     TObjString * ostr;
-     std::cout << "List of shared memory names:" << std::endl;
-     while ((ostr = (TObjString*)next())){
-       std::cout << "  " <<  ostr->GetString().Data() << std::endl;
-     }
-     std::cout << std::endl;
-   }
-
-   /* http server with port, use jobname as top-folder name */
-   TString thttpserver_str;
-   if (all_read_flag == 1) {
-     thttpserver_str = Form("http:%d?top=job_all_pid%d_at_%s", port, gSystem->GetPid(), gSystem->HostName());
-   }else{
-     thttpserver_str = Form("http:%d?top=job_pid%d_at_%s", port, gSystem->GetPid(), gSystem->HostName());
-   }
-   
-   std::cout << "Check availability of the port: " << port << std::endl;
-   TServerSocket *ssocket = new TServerSocket(port);
-   if(!ssocket->IsValid()){
-     std::cout << "TServerSocket::GetErrorCode(): " << ssocket->GetErrorCode() << std::endl;
-     std::cout << "Probably port: " << port << " is already in use." << std::endl;
-     std::cout << "Exit."<< std::endl;
-     delete ssocket;
-     return 1;
-   }else{
-     std::cout << "The port is free." << std::endl;
-     delete ssocket;
-   }
-   
-   THttpServer* serv = new THttpServer(thttpserver_str.Data());
-   /* when read-only mode disabled one could execute object methods like TTree::Draw() */
-   serv->SetReadOnly(kFALSE);
-   
-   TMemFile *transient = 0;
-   TList file_list;
-   TList file_name_list;
-   TObjString * ostr2;
-
-   while (1){
-     if(all_read_flag == 1){
-       shm_name_list.Delete();
-       file_name_list.Delete();
-       TString cmd = "ipcs -m | perl -alne 'if($.>3){@arr = @F[0] =~ /.{2}/g; foreach(@arr){$_ =~ s/00//;}printf(\"%s \",pack(\"H*\", @arr[4].@arr[3].@arr[2].@arr[1]));}'";
-       TString cmd_out = gSystem->GetFromPipe(cmd.Data());
-       std::stringstream ss(cmd_out.Data());
-       std::string std_str;
-       while (ss >> std_str){
-	 shm_name_list.Add(new TObjString(std_str.c_str()));
-       }
-     }
-     TIter next2(&shm_name_list);
-     while ((ostr2 = (TObjString*)next2())){
-       TString shm_name = ostr2->GetString();
-       hlimap(0,shm_name.Data(),shm_name.Length());
-       hrin2(0,9999,0);
-       hdelet(0);
-       if (quest[0]) {
-	 printf("Warning: cannot open the shared memory: %s\n",shm_name.Data());
-	 continue;
-       }
-       TString filename = Form("%s",shm_name.Data());
-       if(all_read_flag == 1){
-	 TString cmd = Form("ipcs -m | grep `perl -e '$str=sprintf(\"%%-4s\",\"%s\");@arr=$str=~/.{1}/g;printf(\"0x%%s\",unpack(\"H*\",@arr[3].@arr[2].@arr[1].@arr[0]));'` | perl -anle '{printf(\"%%s\", @F[2])}'", shm_name.Data());
-	 TString cmd_out = gSystem->GetFromPipe(cmd.Data());
-	 filename = Form("%s_%s",shm_name.Data(),cmd_out.Data());
-       }
-       file_name_list.Add(new TObjString(filename.Data()));
-       TMemFile * tmp = (TMemFile *)file_list.FindObject(filename.Data());
-       if (tmp) {
-	 file_list.Remove(tmp);
-	 delete tmp;
-       }
-       transient = new TMemFile(filename.Data(),"RECREATE",filename.Data());
-       if (!transient) {
-	 printf("Error: can't open the TMemFile: %s \n",filename.Data());
-	 return 1;
-       }
-       file_list.Add(transient);
-       convert_directory("//example");
-       transient->Write();
-       if (gSystem->ProcessEvents()) {
-	 printf("Error: gSystem->ProcessEvents() is null\n");
-	 return 1;
-       }
-       transient->ls();
-     }
-     if(file_list.GetEntries()==0) {
-       TNamed *nam = new TNamed("No_shared_memory","No_shared_memory");
-       gROOT->Add(nam);
-       gROOT->ls();
-       if (gSystem->ProcessEvents()) {
-	 printf("Error: gSystem->ProcessEvents() is null\n");
-	 return 1;
-       }
-       delete nam;
-     }
-     TIter next3(&file_list);
-     while ((transient = (TMemFile*)next3())){
-       if (!file_name_list.FindObject(transient->GetName())) {
-	 file_list.Remove(transient);
-	 delete transient;
-       }
-     }
-     gSystem->Sleep(1000); /* Sleep for 1000 ms */ 
-   }
-   return 0;
+void init_hbook(const int kind){
+  static int kind_saved = -1;
+  if (kind != kind_saved){
+    if (kind == 0){
+      int pawc_size = PAWC_SIZE;
+      hlimit_(pawc_size);
+    }
+    kind_saved = kind;
+  }
+  return;
 }
 
-/* ____________________________________________________________________________ */
-void convert_directory(const char *dir)
-{
-  /* convert a directory */
-  /* Nobu c/o 2020/04/29
-    printf(" Converting directory %s\n",dir); */
-     
-/* c/o Nobu 2018/01/27 23:13:15 -->
-   Int_t id;
-//  Int_t nastycase=0;
-//  Int_t nastyprint=0;
-//  Int_t idold = 0;
-   for (Int_t key=1;key<1000000;key++) {
-      int z0 = 0;
-      rzink(key,z0,"S",1);
-      printf("key %d, quest[0] %d\n",key, quest[0]);
-      if (quest[0]) break;
-      if (quest[13] & 8) {
-         continue;
-//        if (!nastyprint) {
-//           printf("Found nasty Hbook case!! You had an Hbook error message\n");
-//           printf(" when creating the file (too many records)\n");
-//           printf(" Hbook file should have been created with a bigger LRECL\n");
-//           printf(" ROOT will try to recover\n");
-//           nastyprint = 1;
-//        }
-//        nastycase  = 1;
+std::string get_shm_names_str(const char *shm_names){
+  std::string shm_names_str = shm_names;
+  while (((int)shm_names_str.find(",")) > -1) {
+    shm_names_str[shm_names_str.find(",")] = ' ';
+  }
+  for (int i = 0; i < shm_names_str.length(); i++) {
+    if((int)(shm_names_str[i]) >= 0x61 &&
+       (int)(shm_names_str[i]) <= 0x7a){
+      /* Lower case --> Upper case w/o <algorithm> header */
+      shm_names_str[i] = (char)((int)shm_names_str[i] - 0x20);
+    }
+  }
+  if (shm_names_str.length() == 0) {
+    FILE* pipe = popen("ipcs -m", "r");
+    char buffer[256];
+    int macos_flag = 0;
+    if (fgets(buffer, 256, pipe) != NULL) {
+      std::string buffer_str = buffer;
+      if (buffer_str.substr(0,3) == "IPC") {
+	macos_flag = 1;
       }
-      id = quest[20];
-//     if (id == idold && nastycase) continue;
-//     nastycase  = 0;
-//     idold = id;
---> End */
-
-   Int_t idvec[1000000];
-   Int_t noh;
-   hrin2(0,9999,0);
-   hidall(idvec,noh);
-   hdelet(0);
-   for (Int_t i=0;i<noh;i++) {
-     Int_t id = idvec[i];
-      int i999 = 999;
-      hrin2(id,i999,0);
-      if (quest[0]) {
-         printf("Error cannot read ID = %d\n",id);
-         /* break; */
+    }
+    int nline = 0;
+    while (fgets(buffer, 256, pipe) != NULL) {
+      nline++;
+      if (nline <= 2) {
+	continue;
       }
-      hdcofl();
-      lcid  = hcbook[10];
-      lcont = lq[lcid-1];
-      if (hcbits[3]) {
-         if (iq[lcid-2] == 2) convert_rwn(id);
-         else                 convert_cwn(id);
-         hdelet(id);
-         continue;
+      std::stringstream ss(buffer);
+      std::string buffer_str;
+      if (macos_flag == 1){
+	ss >> buffer_str;
+	ss >> buffer_str;
+	ss >> buffer_str;
+      }else{
+	ss >> buffer_str;
       }
-      if (hcbits[0] && hcbits[7]) {
-         convert_profile(id);
-         hdelet(id);
-         continue;
+      std::stringstream ss2;
+      ss2 << std::hex << buffer_str;
+      unsigned int str_int = 0;
+      ss2 >> str_int;
+      std::string out_str = "";
+      if ((str_int&0x000000ff)>0) {out_str += (char)((str_int&0x000000ff)>>0);}
+      if ((str_int&0x0000ff00)>0) {out_str += (char)((str_int&0x0000ff00)>>8);}
+      if ((str_int&0x00ff0000)>0) {out_str += (char)((str_int&0x00ff0000)>>16);}
+      if ((str_int&0xff000000)>0) {out_str += (char)((str_int&0xff000000)>>24);}
+      if (out_str.length() == 0){
+	continue;
       }
-      if (hcbits[0]) {
-         convert_1d(id);
-         hdelet(id);
-         continue;
+      ss >> buffer_str;
+      ss >> buffer_str;
+      int valid_name_flag = 1;
+      for (int i = 0; i < out_str.length(); i++) {
+	if((int)(out_str[i]) < 0x20 ||
+	   (int)(out_str[i]) > 0x7e){
+	  valid_name_flag = 0; 
+	}
       }
-      if (hcbits[1] || hcbits[2]) {
-         convert_2d(id);
-         hdelet(id);
+      if (valid_name_flag == 0) {
+	continue;
       }
-   }
-
-   /* converting subdirectories of this directory */
-   const Int_t kKLS = 26;
-   const Int_t kKNSD = 23;
-   lcdir = rzcl[2];
-   Int_t ls = iq[lcdir+kKLS];
-   Int_t ndir = iq[lcdir+kKNSD];
-   Int_t nch=16;
-   Int_t ihdir[4];
-   Int_t ncw = 4;
-   TDirectory *cursav = gDirectory;
-   Int_t i;
-   char chdir[17];
-   char hbookdir[17];
-   for (Int_t k=0;k<ndir;k++) {
-      lcdir = rzcl[2];
-      zitoh(iq[lcdir+ls+7*k],ihdir[0],ncw);
-      for (i=0;i<17;i++) chdir[i] = 0;
-      uhtoc(ihdir[0],ncw,chdir,nch ,16);
-      /* do not process directory names containing a slash */
-      if (strchr(chdir,'/')) {
-         printf("Sorry cannot convert directory name %s because it contains a slash\n",chdir);
-         continue;
-      }   
-      strlcpy(hbookdir,chdir,17);
-      for (i=16;i>0;i--) {
-         if (chdir[i] == 0) continue;
-         if (chdir[i] != ' ') break;
-         chdir[i] = 0;
+      for (int i = 0; i < out_str.length(); i++) {
+	if((int)(out_str[i]) >= 0x61 &&
+	   (int)(out_str[i]) <= 0x7a){
+	  out_str[i] = (char)((int)out_str[i] - 0x20);
+	}
       }
-      hcdir(PASSCHAR(hbookdir),PASSCHAR(" "),16,1);
-      TDirectoryFile *newdir = new TDirectoryFile(chdir,chdir);
-      newdir->cd();
-      convert_directory(chdir);
-      hcdir(PASSCHAR("\\"),PASSCHAR(" "),1,1);
-      /* To avoid memory leak, newdir may NOT be written and deleted here */
-      /*   newdir->Write(); */
-      cursav->cd();
-   }
+      shm_names_str += out_str + "," + buffer_str + " ";
+    }
+    pclose(pipe);
+  }
+  return shm_names_str;
 }
 
-/* ____________________________________________________________________________ */
-void convert_1d(Int_t id)
-{
-   /* convert 1d histogram */
-   if (id > 0) snprintf(idname,128,"h%d",id);
-   else        snprintf(idname,128,"h_%d",-id);
-   hnoent(id,nentries);
-   hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
-   chtitl[4*nwt] = 0;
-   TH1F *h1;
-   Int_t i;
-   /* Nobu added May 9, 2020*/
-   TString chtitl_str = chtitl;
-   while (chtitl_str.EndsWith(" ")){
-     chtitl_str.Remove(TString::kTrailing, ' ');
-   }
-   TString xtitle = "";
-   TString ytitle = "";
-   Int_t dlmpos = chtitl_str.First(";");
-   if (dlmpos > -1) {
-     xtitle = chtitl_str(dlmpos+1,chtitl_str.Length()-1);
-     chtitl_str = chtitl_str(0,dlmpos);
-   }
-   dlmpos = xtitle.First(";");
-   if (dlmpos > -1) {
-     ytitle = xtitle(dlmpos+1,xtitle.Length()-1);
-     xtitle = xtitle(0,dlmpos);
-   }
-   TString idname_title = Form("%s_%s",idname,chtitl_str.Data());
-   if (hcbits[5]) {
-      Int_t lbins = lq[lcid-2];
-      Double_t *xbins = new Double_t[ncx+1];
-      for (i=0;i<=ncx;i++) xbins[i] = q[lbins+i+1];
-      /* h1 = new TH1F(idname,chtitl,ncx,xbins); */
-      h1 = new TH1F(idname_title.Data(),chtitl_str.Data(),ncx,xbins);
-      delete [] xbins;
-   } else {
-     /* h1 = new TH1F(idname,chtitl,ncx,xmin,xmax); */
-      h1 = new TH1F(idname_title.Data(),chtitl_str.Data(),ncx,xmin,xmax);
-   }
-   h1->GetXaxis()->CenterTitle();
-   h1->GetYaxis()->CenterTitle();
-   h1->GetXaxis()->SetTitle(xtitle.Data());
-   h1->GetYaxis()->SetTitle(ytitle.Data());
-   if (hcbits[8]) h1->Sumw2();
-   TGraph *gr = 0;
-   if (hcbits[11]) {
+std::string open_input_shm(const char* shm_name){
+  /* std::cout << "open_input_shm starts." << std::endl; */
+  std::string shm_name_str = shm_name;
+  shm_name_str = shm_name_str.substr(0,4);
+  if (((int)shm_name_str.find(",")) > -1) {
+    shm_name_str = shm_name_str.substr(0,shm_name_str.find(","));
+  }
+  if (shm_name_str.length()==0){
+    return "";
+  }
+  for (int i = 0; i < shm_name_str.length(); i++) {
+    if((int)(shm_name_str[i]) < 0x20 ||
+	      (int)(shm_name_str[i]) > 0x7e){
+      return "";
+    }
+  }
+  for (int i = 0; i < shm_name_str.length(); i++) {
+    if((int)(shm_name_str[i]) >= 0x61 &&
+       (int)(shm_name_str[i]) <= 0x7a){
+      shm_name_str[i] = (char)((int)shm_name_str[i] - 0x20);
+    }
+  }
+  /*std::cout << "before hlimap in open_input_shm" << std::endl;*/
+  hlimap_(0,shm_name_str.c_str(),shm_name_str.length());
+  /*std::cout << "before hrin in open_input_shm" << std::endl;*/
+  hdelet_(0);
+  hrin_(0,9999,0);
+  /*std::cout << "before hdelet in open_input_shm" << std::endl;*/
+  hdelet_(0);
+  if (quest_[0]) {
+    printf("Error: cannot open the shared memory: %s\n",shm_name_str.c_str());
+    return "";
+  }
+  shm_name_str = "//" + shm_name_str;
+  return shm_name_str;
+}
+
+THttpServer* open_output_srv(int port) {
+  static THttpServer* serv = 0;
+  static int saved_port = 0;
+  /* static int message_counter = 0; */
+  if(port < 0){
+    if(serv != 0){
+      std::cout << "THttpServer on port " << saved_port << " was deleted." << std::endl;
+      delete serv;
+      serv = 0;
+    }
+    return 0;
+  }
+  saved_port = port;
+  if (serv == 0) {
+    std::cout << "Check if the port: " << port << " can be bound or not." << std::endl;
+    TServerSocket *ssocket = new TServerSocket(port);
+    if(!ssocket->IsValid()){
+      std::cout << "TServerSocket::GetErrorCode(): " << ssocket->GetErrorCode() << std::endl;
+      std::cout << "Probably port: " << port << " is already in use." << std::endl;
+      std::cout << "Use a different port or wait a moment until the port becomes available." << std::endl;
+      delete ssocket;
+      return 0;
+    }
+    std::cout << "The port: " << port << " can be bound." << std::endl;
+    /*
+    std::cout << "Check if the port: " << port << " is open or not on the firewall of " << gSystem->HostName() <<"."<< std::endl;
+    TSocket *sock = new TSocket(gSystem->HostName(), port);
+    if(!sock->IsValid()){
+      std::cout << "Probably port: " << port << " is closed by the firewall." << std::endl;
+      std::cout << "Please use a different port." << std::endl;
+      std::cout << "On aino-1/aino-2, port 5901 -- 5999 are open." << std::endl;
+      std::cout << "On saho-a/saho-b, port 5901 -- 5999 are open." << std::endl;
+      std::cout << "The open port information can be investigated by the linux command: nmap" << std::endl;
+      delete sock;
+      delete ssocket;
+      return 0;
+    }
+    std::cout << "The port: " << port << " is open on the firewall." << std::endl;
+    delete sock;
+    */
+    delete ssocket;
+    
+    TString thttpserver_str = Form("http:%d?top=pid%d_at_%s", port, gSystem->GetPid(), gSystem->HostName());
+    serv = new THttpServer(thttpserver_str.Data());
+    std::cout << "Now you can have access to http://" << gSystem->HostName() << ":"
+	      << port << "/" << std::endl;
+  }
+  /*else{
+    if (message_counter < 1) {
+      std::cout << "THttpServer is already runing on port " << saved_port << "." << std::endl;
+      std::cout << "Access to this THttpServer." << std::endl;
+      message_counter++;
+    }
+    }*/
+  return serv;
+}
+
+int convert_histo_hbk2root(int id, int kind, TDirectory* cur_dir) {
+  char idname[128];
+  if (id > 0) snprintf(idname,128,"h%d",id);
+  else        snprintf(idname,128,"h_%d",-id);
+  int nentries;
+  hnoent_(id,nentries);
+  if (quest_[0] != 0) {
+     std::cout << "quest_[0] != 0 after hnoent subroutine..." << std::endl;
+     std::cout << "This may happen during booking of the hbooks. Skip the conversion." << std::endl;
+    return 1;
+  }
+  char chtitl[128];
+  int ncx,ncy,nwt,idb;
+  float xmin,xmax,ymin,ymax;
+  hgive_(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
+  int lcid  = hcbook_[10];
+  if (lcid <= 0) {
+    std::cout << "lcid <= 0 after hgive subroutine..." << std::endl;
+    return 1;
+  }
+
+  chtitl[4*nwt] = 0;
+  std::string chtitl_str = chtitl;
+  while (chtitl_str.back() == ' '){
+    chtitl_str.pop_back();
+  }
+  std::string xtitle = "";
+  std::string ytitle = "";
+  int dlmpos = chtitl_str.find(";");
+  if (dlmpos > -1) {
+    xtitle = chtitl_str.substr(dlmpos+1);
+    chtitl_str = chtitl_str.substr(0,dlmpos);
+  }
+  dlmpos = xtitle.find(";");
+  if (dlmpos > -1) {
+    ytitle = xtitle.substr(dlmpos+1);
+    xtitle = xtitle.substr(0,dlmpos);
+  }
+  /*std::string idname_title = Form("%s_%s",idname,chtitl_str.c_str());*/
+  std::string idname_title = idname;
+  if(hbk_id_title_flag > 0){
+    idname_title += "_" + chtitl_str;
+    if (hbk_id_title_flag == 2){
+      std::stringstream ss("/ , . { } ( ) [ ] ? % # ! & ' - = ~ ^ |");
+      std::string tmp_str = "";
+      while (ss >> tmp_str){
+	while (((int)idname_title.find(tmp_str.c_str())) > -1) {
+	  idname_title[idname_title.find(tmp_str.c_str())] = '_';
+	}
+      }
+      while (((int)idname_title.find(" ")) > -1) {
+	idname_title[idname_title.find(" ")] = '_';
+      }
+    }
+  }
+  TH1* h = (TH1*)cur_dir->TDirectory::FindObject(idname_title.c_str());
+  /*std::cout << "h: " << h << std::endl;*/
+  int new_flag = 0;
+  int cur_kind = 0;
+  int *lq = &pawc_[9];
+  int *iq = &pawc_[17];
+  float *q = (float*)iq;
+  if (h) {
+    if(h->InheritsFrom("TH2")){
+      cur_kind = 2;
+    }else if (h->InheritsFrom("TH1")){
+      cur_kind = 1;
+    }
+  }
+  if(cur_kind != kind){
+    new_flag = 1;
+  }
+  /* int lcid  = hcbook_[10]; */
+  if(kind == 1){
+    if(h){
+      if(ncx != h->GetXaxis()->GetNbins()){
+	new_flag = 1;
+      }
+      if (hcbits_[5]) {
+	int lbins = lq[lcid-2];
+	for (int i=0;i<=ncx;i++) {
+	  if(q[lbins+i+1] != h->GetXaxis()->GetXbins()->GetArray()[i]){
+	    new_flag = 1;
+	  }
+	}
+      }else{
+	if((xmin != h->GetXaxis()->GetXmin())||
+	   (xmax != h->GetXaxis()->GetXmax())){
+	  new_flag = 1;
+	}
+      }
+    }
+    if (new_flag == 1){
+      if(h){
+	delete h;
+	h = 0;
+      }
+      if (hcbits_[5]) {
+	int lbins = lq[lcid-2];
+	float *xbins = new float[ncx+1];
+	for (int i=0;i<=ncx;i++) xbins[i] = q[lbins+i+1];
+	TDirectory* cursav = gDirectory;
+	cur_dir->cd();
+	h = new TH1F(idname_title.c_str(),chtitl_str.c_str(),ncx,xbins);
+	/*std::cout << "h->GetName(): " << h->GetName() << std::endl;*/
+	cursav->cd();
+	delete [] xbins;
+      } else {
+	TDirectory* cursav = gDirectory;
+	cur_dir->cd();
+	h = new TH1F(idname_title.c_str(),chtitl_str.c_str(),ncx,xmin,xmax);
+	/*std::cout << "h->GetName(): " << h->GetName() << std::endl;*/
+	cursav->cd();
+      }
+      h->GetXaxis()->CenterTitle();
+      h->GetYaxis()->CenterTitle();
+    }
+    /*std::cout << "'" << idname_title.c_str() << "'" << std::endl;*/
+    if (hcbits_[8]) h->Sumw2();
+    TGraph *gr = 0;
+    if (hcbits_[11]) {
+      std::cout << "hcbits_[11]:" << hcbits_[11] << std::endl;
+
+      TDirectory* cursav = gDirectory;
+      cur_dir->cd();
       gr = new TGraph(ncx);
-      h1->GetListOfFunctions()->Add(gr);
-   }
-
-   /*Float_t x,yx;*/
-   Float_t x;
-   for (i=0;i<=ncx+1;i++) {
-      x = h1->GetBinCenter(i);
-      /*For ROOT v6, the error calculation is wrong.
-	2020/05/01 Nobu
-	yx = hi(id,i);
-	h1->Fill(x,yx); */
-      h1->SetBinContent(i,hi(id,i));
-      if (hcbits[8]) h1->SetBinError(i,hie(id,i));
-      if (gr && i>0 && i<=ncx) gr->SetPoint(i,x,hif(id,i));
-   }
-   Float_t yymin, yymax;
-   if (hcbits[19]) {
+      cursav->cd();
+      h->GetListOfFunctions()->Add(gr);
+    }
+    float x;
+    for (int i=0;i<=ncx+1;i++) {
+      x = h->GetBinCenter(i);
+      h->SetBinContent(i,hi_(id,i));
+      /* if (hcbits_[8])*/
+      hsifla_(9,1);
+      h->SetBinError(i,hie_(id,i));
+      if (gr && i>0 && i<=ncx) gr->SetPoint(i,x,hif_(id,i));
+    }
+    int kMIN1 = 7;
+    int kMAX1 = 8;
+    float yymin, yymax;
+    if (hcbits_[19]) {
       yymax = q[lcid+kMAX1];
-      h1->SetMaximum(yymax);
-   }
-   if (hcbits[20]) {
+      h->SetMaximum(yymax);
+    }
+    if (hcbits_[20]) {
       yymin = q[lcid+kMIN1];
-      h1->SetMinimum(yymin);
-   }
-   h1->SetEntries(nentries);
-   /* To avoid memory leak, h1 should NOT be written and deleted here */
-   /* h1->Write(); */
-   /* delete h1;*/
+      h->SetMinimum(yymin);
+    }
+    h->SetOption("hist,func");
+  }else if (kind==2){
+    if(h){
+      if((ncx != h->GetXaxis()->GetNbins())||
+	 (xmin != h->GetXaxis()->GetXmin())||
+	 (xmax != h->GetXaxis()->GetXmax())||
+	 (ncy != h->GetYaxis()->GetNbins())||
+	 (ymin != h->GetYaxis()->GetXmin())||
+	 (ymax != h->GetYaxis()->GetXmax())){
+	new_flag = 1;
+      }
+    }
+    if (new_flag == 1){
+      if(h){
+	delete h;
+	h = 0;
+      }
+      TDirectory* cursav = gDirectory;
+      cur_dir->cd();
+      h = new TH2F(idname_title.c_str(),chtitl_str.c_str(),ncx,xmin,xmax,ncy,ymin,ymax);
+      /*std::cout << "h->GetName(): " << h->GetName() << std::endl;*/
+      cursav->cd();
+      h->GetXaxis()->CenterTitle();
+      h->GetYaxis()->CenterTitle();
+    }
+    int lcont = lq[lcid-1];
+    int lw = lq[lcont];
+    if (lw) h->Sumw2();
+    for (int j=0;j<=ncy+1;j++) {
+      for (int i=0;i<=ncx+1;i++) {
+	h->SetBinContent(i,j,hij_(id,i,j));
+	if (lw) {
+	  float err2 = hije_(id,i,j);
+	  h->SetBinError(i,j,err2);
+	}
+      }
+    }
+    h->SetOption("colz");
+  }
+  h->GetXaxis()->SetTitle(xtitle.c_str());
+  h->GetYaxis()->SetTitle(ytitle.c_str());
+  h->SetEntries(nentries);
+  return 0;
 }
 
-/* ____________________________________________________________________________ */
-void convert_2d(Int_t id)
-{
-   /* convert 2d histogram */
-   if (id > 0) snprintf(idname,128,"h%d",id);
-   else        snprintf(idname,128,"h_%d",-id);
-   hnoent(id,nentries);
-   hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
-   chtitl[4*nwt] = 0;
-   /* Nobu added May 9, 2020*/
-   /* TH2F *h2 = new TH2F(idname,chtitl,ncx,xmin,xmax,ncy,ymin,ymax); */
-   TString chtitl_str = chtitl;
-   while (chtitl_str.EndsWith(" ")){
-     chtitl_str.Remove(TString::kTrailing, ' ');
-   }
-   TString xtitle = "";
-   TString ytitle = "";
-   Int_t dlmpos = chtitl_str.First(";");
-   if (dlmpos > -1) {
-     xtitle = chtitl_str(dlmpos+1,chtitl_str.Length()-1);
-     chtitl_str = chtitl_str(0,dlmpos);
-   }
-   dlmpos = xtitle.First(";");
-   if (dlmpos > -1) {
-     ytitle = xtitle(dlmpos+1,xtitle.Length()-1);
-     xtitle = xtitle(0,dlmpos);
-   }
-   TString idname_title = Form("%s_%s",idname,chtitl_str.Data());
-   TH2F *h2 = new TH2F(idname_title.Data(),chtitl_str.Data(),ncx,xmin,xmax,ncy,ymin,ymax);
-   h2->GetXaxis()->CenterTitle();
-   h2->GetYaxis()->CenterTitle();
-   h2->GetXaxis()->SetTitle(xtitle.Data());
-   h2->GetYaxis()->SetTitle(ytitle.Data());
-   Float_t offsetx = 0.5*(xmax-xmin)/ncx;
-   Float_t offsety = 0.5*(ymax-ymin)/ncy;
-   Int_t lw = lq[lcont];
-   if (lw) h2->Sumw2();
-
-   Float_t x = 0.0, y = 0.0;
-   for (Int_t j=0;j<=ncy+1;j++) {
-      for (Int_t i=0;i<=ncx+1;i++) {
-      /*For ROOT v6, the error calculation is wrong.
-	2020/05/01 Nobu
-         hijxy(id,i,j,x,y);
-         h2->Fill(x+offsetx,y+offsety,hij(id,i,j));*/
-         h2->SetBinContent(i,j,hij(id,i,j));
-         if (lw) {
-            Double_t err2 = hije(id,i,j);
-            h2->SetCellError(i,j,err2);
-         }
+void convert_dir_hbk2root(const char *cur_dir, TDirectory* output_dir) {
+  int idvec[100000];
+  int imax = 0;
+  std::string cur_dir_str = cur_dir;
+  /*std::cout << "cur_dir_str:" << cur_dir_str << std::endl;*/
+  hcdir_(cur_dir_str.c_str()," ",cur_dir_str.length(),1);
+  hrin_(0,9999,0);
+  hidall_(idvec,imax);
+  hdelet_(0);
+  for (int i=0;i<imax;i++) {
+    int id = idvec[i];
+    int i999 = 999;
+    hrin_(id,i999,0);
+    if (quest_[0]) {
+      printf("Error cannot read ID = %d\n",id);
+      /* break; */
+    }
+    hdcofl_();
+    /*lcid  = hcbook_[10];
+      lcont = lq[lcid-1]; */
+    if (hcbits_[3]) {
+      /* skip ntuple Nobu 20210826
+	 if (iq[lcid-2] == 2) convert_rwn(id);
+	 else                 convert_cwn(id);*/
+      hdelet_(id);
+      continue;
+    }
+    if (hcbits_[0] && hcbits_[7]) {
+      /* skip profile Nobu 20210826
+	 convert_profile(id);*/
+      hdelet_(id);
+      continue;
+    }
+    if (hcbits_[0]) {
+      if (convert_histo_hbk2root(id, 1, output_dir)){
+	/* std::cout << "Error in convert_histo_hbk2root(id, 1, output_dir)" << std::endl; */
+	break;
+      }else{
+	hdelet_(id);
       }
-   }
-   h2->SetEntries(nentries);
-   /* Nobu added May 9, 2020*/
-   h2->SetOption("colz");
-   /* To avoid memory leak, h2 should NOT be written and deleted here */
-   /* h2->Write();*/
-   /* delete h2; */
+      continue;
+    }
+    if (hcbits_[1] || hcbits_[2]) {
+      if(convert_histo_hbk2root(id, 2, output_dir)){
+	/* std::cout << "Error in convert_histo_hbk2root(id, 2, output_dir)" << std::endl; */
+	break;
+      }else{
+	hdelet_(id);
+      }
+    }
+  }
+  /* converting subdirectories of this directory */
+  int ndir = 0;
+  char subdirs[50][16];
+  hrdir_(50, subdirs[0], ndir, 16);
+  /*std::cout <<  "ndir: " << ndir << std::endl;*/
+  char chdir[17];
+  for (int k=0;k<ndir;k++) {
+    strlcpy(chdir,subdirs[k],16);
+    /*std::cout <<  "subdirs[k]-->" <<  subdirs[k] << "<--" << std::endl;
+      std::cout <<  "chdir-->" <<  chdir << "<--" << std::endl;*/
+    if (strchr(chdir,'/')) {
+      printf("Sorry cannot convert directory name %s because it contains a slash\n",chdir);
+      continue;
+    }
+    /*std::cout << "chdir: " << chdir << std::endl;*/
+    chdir[16] = 0;
+    for (int i=16;i>0;i--) {
+      if (chdir[i] == 0) continue;
+      if (chdir[i] != ' ') break;
+      chdir[i] = 0;
+    }
+    /*std::cout << "chdir-->" << chdir << "<--" << std::endl;*/
+    std::string chdir_str = chdir;
+    TDirectory* new_dir = (TDirectory*)output_dir->TDirectory::FindObject(chdir_str.c_str());
+    if (new_dir == 0) {
+      new_dir = new TDirectoryFile(chdir_str.c_str(),chdir_str.c_str(),"",output_dir);
+    }
+    std::string new_cur_dir = cur_dir_str.c_str();
+    new_cur_dir = new_cur_dir + "/" + chdir;
+    convert_dir_hbk2root(new_cur_dir.c_str(),new_dir);
+    hcdir_(cur_dir_str.c_str()," ",cur_dir_str.length(),1);
+  }
+  return;
 }
 
-//____________________________________________________________________________
-void convert_profile(Int_t id)
-{
-   /* the following structure is used in Hbook
-      lcid points to the profile in array iq
-      lcont = lq(lcid-1)
-      lw    = lq(lcont)
-      ln    = lq(lw)
-      if option S jbyt(iq(lw),1,2) = 1
-      if option I jbyt(iq(lw),1,2) = 2 */
 
-   if (id > 0) snprintf(idname,128,"h%d",id);
-   else        snprintf(idname,128,"h_%d",-id);
-   hnoent(id,nentries);
-   Int_t lw = lq[lcont];
-   Int_t ln = lq[lw];
-   hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
-   chtitl[4*nwt] = 0;
-   const char *option= " ";
-   if (iq[lw] == 1) option = "S";
-   if (iq[lw] == 2) option = "I";
-   TProfile *p = new TProfile(idname,chtitl,ncx,xmin,xmax,ymin,ymax,option);
-
-   const Int_t kCON1 = 9;
-   Int_t i;
-   for (i=1;i<=ncx;i++) {
-      Int_t n = Int_t(q[ln+i]);
-      p->SetBinEntries(i,n);
-      Float_t content = q[lcont+kCON1+i];
-      Float_t error   = TMath::Sqrt(q[lw+i]);
-      p->SetBinContent(i,content);
-      p->SetBinError(i,error);
-   }
-   p->SetEntries(nentries);
-   p->Write();
-   delete p;
+void shm2srv(const char *shm_name, int port, TDirectory* root_dir) {
+  init_hbook(0);
+  std::string shm_name_str = open_input_shm(shm_name);
+  if(shm_name_str==""){return;}
+  THttpServer* serv = open_output_srv(port);
+  if (serv == 0) {return;}
+  if (root_dir == 0) {root_dir = gROOT;}
+  convert_dir_hbk2root(shm_name_str.c_str(), root_dir);
+  if (gSystem->ProcessEvents()) {
+    std::cout << "Error: gSystem->ProcessEvents() is not null" << std::endl;
+  }
+  return;
 }
 
-/* ____________________________________________________________________________ */
-void convert_rwn(Int_t id)
-{
-   /* convert row wise ntuple */
-   const int kNchar=9;
-   int nvar;
-   int ier=0;
-   int i,j;
-   char *chtag_out;
-   float *x;
-   float rmin[1000], rmax[1000];
-
-   if (id > 0) snprintf(idname,128,"h%d",id);
-   else        snprintf(idname,128,"h_%d",-id);
-   hnoent(id,nentries);
-   printf(" Converting RWN with ID= %d, nentries = %d\n",id,nentries);
-   nvar=0;
-   hgiven(id,chtitl,nvar,PASSCHAR(""),rmin[0],rmax[0],80,0);
-
-   chtag_out = new char[nvar*kNchar+1];
-   x = new float[nvar];
-
-   chtag_out[nvar*kNchar]=0;
-   for (i=0;i<80;i++)chtitl[i]=0;
-   hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,kNchar);
-   hgnpar(id,"?",1);
-   char *name = chtag_out;
-   for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
-   TTree *tree = new TTree(idname,chtitl);
-   Int_t first,last;
-   for(i=0; i<nvar;i++) {
-      name[kNchar-1] = 0;
-      first = last = 0;
-      /* suppress traling blanks */
-      for (j=kNchar-2;j>0;j--) {
-         if(golower) name[j] = tolower(name[j]);
-         if (name[j] == ' ' && last == 0) name[j] = 0;
-         else last = j;
+void shms2srv(const char *shm_names, int port) {
+  init_hbook(0);
+  std::string shm_names_str = get_shm_names_str(shm_names);
+  std::stringstream ss(shm_names_str);
+  std::string shm_name_str;
+  while(ss >> shm_name_str){
+    if (((int)shm_name_str.find(",")) > -1) {
+      shm_name_str[shm_name_str.find(",")] = '_';
+    }
+    TDirectory* f = (TDirectory*)gROOT->GetListOfFiles()->FindObject(shm_name_str.c_str());
+    /*std::cout << "f: " <<  f << std::endl;*/
+    if (!f) {
+      f = new TMemFile(shm_name_str.c_str(), "recreate");
+      /*std::cout << "f->GetName(): " <<  f->GetName() << std::endl;*/
+      if (!f) {
+	printf("Error: can't open the direcotry: %s\n", shm_name_str.c_str());
+	return;
       }
-      if (golower == 2) name[0] = tolower(name[0]);
-
-      /* suppress heading blanks */
-      for (j=0;j<kNchar;j++) {
-         if (name[j] != ' ') break;
-         first = j+1;
+    }
+    shm2srv(shm_name_str.c_str(), port, f);
+  }
+  if(shms2srv_sync_flag == 1){
+    int match_flag = 0;
+    while (match_flag == 0){
+      for (int i = 0; i < gROOT->GetListOfFiles()->GetEntries(); i++){
+	TFile* f = (TFile*)gROOT->GetListOfFiles()->At(i);
+	std::string classname = f->ClassName();
+	match_flag = 0;
+	if(classname == "TMemFile"){
+	  std::stringstream ss2(shm_names_str);
+	  std::string shm_name_str2;
+	  while(ss2 >> shm_name_str2){
+	    if (((int)shm_name_str2.find(",")) > -1) {
+	      shm_name_str2[shm_name_str2.find(",")] = '_';
+	    }
+	    if (shm_name_str2 == f->GetName()) {
+	      match_flag = 1;
+	      break;
+	    }
+	  }
+	  if (match_flag == 0){
+	    delete f;
+	    f = 0;
+	    break;
+	  }
+	}
       }
-      tree->Branch(&name[first],&x[i],&name[first],bufsize);
-      name += kNchar;
-   }
-   for(i=1;i<=nentries;i++) {
-      hgnf(id,i,x[0],ier);
-      tree->Fill();
-   }
-   tree->Write();
-   delete tree;
-   delete [] x;
-   delete [] chtag_out;
+    }
+  }
+  return;
 }
 
-/* ____________________________________________________________________________ */
-void convert_cwn(Int_t id)
-{
-   /* convert column wise ntuple */
-   const int kNchar=9;
-   int nvar;
-   int ier=0;
-   int i,j;
-   int nsub,itype,isize,ielem;
-   char *chtag_out;
-   float *x;
-   float rmin[1000], rmax[1000];
-
-   if (id > 0) snprintf(idname,128,"h%d",id);
-   else        snprintf(idname,128,"h_%d",-id);
-   hnoent(id,nentries);
-   printf(" Converting CWN with ID= %d, nentries = %d\n",id,nentries);
-   nvar=0;
-   hgiven(id,chtitl,nvar,PASSCHAR(""),rmin[0],rmax[0],80,0);
 
 
-   chtag_out = new char[nvar*kNchar+1];
-   Int_t *charflag = new Int_t[nvar];
-   Int_t *lenchar  = new Int_t[nvar];
-   Int_t *boolflag = new Int_t[nvar];
-   Int_t *lenbool  = new Int_t[nvar];
-   UChar_t *boolarr = new UChar_t[10000];
-   x = new float[nvar];
-
-   chtag_out[nvar*kNchar]=0;
-   for (i=0;i<80;i++)chtitl[i]=0;
-   hgiven(id,chtitl,nvar,chtag_out,rmin[0],rmax[0],80,kNchar);
-   Long_t add= (Long_t)&bigbuf[0];
-   hbnam(id,PASSCHAR(" "),add,PASSCHAR("$CLEAR"),0,1,6);
-
-   Int_t bufpos = 0;
-   Int_t isachar = 0;
-   Int_t isabool = 0;
-   char fullname[1024];
-   char name[512];
-   char block[512];
-   char oldblock[512];
-   Int_t nbits = 0;
-   strlcpy(oldblock,"OLDBLOCK",512);
-   Int_t oldischar = -1;
-   for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
-   TTree *tree = new TTree(idname,chtitl);
-   for(i=0; i<nvar;i++) {
-      memset(name,' ',sizeof(name));
-      name[sizeof(name)-1] = 0;
-      memset(block,' ',sizeof(block));
-      block[sizeof(block)-1] = 0;
-      memset(fullname,' ',sizeof(fullname));
-      fullname[sizeof(fullname)-1]=0;
-      hntvar2(id,i+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,512,1024,512);
-
-      for (j=510;j>0;j--) {
-         if(golower) name[j] = tolower(name[j]);
-         if (name[j] == ' ') name[j] = 0;
-      }
-      if (golower == 2) name[0] = tolower(name[0]);
-
-      for (j=1022;j>0;j--) {
-         if(golower && fullname[j-1] != '[') fullname[j] = tolower(fullname[j]);
-         /* convert also character after [, if golower == 2 */
-         if (golower == 2) fullname[j] = tolower(fullname[j]);
-         if (fullname[j] == ' ') fullname[j] = 0;
-      }
-      /* convert also first character, if golower == 2 */
-      if (golower == 2) fullname[0] = tolower(fullname[0]);
-      for (j=510;j>0;j--) {
-         if (block[j] == ' ') block[j] = 0;
-         else break;
-      }
-      if (itype == 1) {
-         if( isize == 4 )     strlcat(fullname,"/F",1024);
-         else if( isize == 8) strlcat(fullname,"/D",1024);
-      }
-
-
-      /* add support for 1-byte (Char_t) and 2-byte (Short_t) integers
-	 Int_t nBytesUsed = 4; // default for integers */
-
-      if( itype == 2 ) {
-         if( optcwn == 1 ) {
-            if( nbits > 16 ) {
-               strlcat(fullname,"/I",1024);
-            } else {
-               if( nbits > 8 ) {
-                  strlcat(fullname,"/S",1024);
-                  /* nBytesUsed = 2; */
-               } else {
-                  strlcat(fullname,"/B",1024);
-                  /* nBytesUsed = 1; */
-               }
-            }
-         } else {
-            strlcat(fullname,"/I",1024);
-         }
-      }
-
-      /* add support for 1-byte (UChar_t) and 2-byte (UShort_t) integers */
-      if ( itype == 3 ) {
-         if(  optcwn == 1 ) {
-            if( nbits > 16) {
-               strlcat(fullname,"/i",1024);
-            } else {
-               if( nbits > 8 ) {
-                  strlcat(fullname,"/s",1024);
-                  /* nBytesUsed = 2; */
-               } else {
-                  strlcat(fullname,"/b",1024);
-                  /* nBytesUsed = 1; */
-               }
-            }
-         } else {
-            strlcat(fullname,"/i",1024);
-         }
-      }
-
-
-
-
-      /*     if (itype == 4) strlcat(fullname,"/i",1024); */
-      if (itype == 4) strlcat(fullname,"/b",1024);
-      if (itype == 5) strlcat(fullname,"/C",1024);
-      printf("Creating branch:%s, block:%s, fullname:%s, nsub=%d, itype=%d, isize=%d, ielem=%d\n",name,block,fullname,nsub,itype,isize,ielem);
-      Int_t ischar;
-      if (itype == 5) ischar = 1;
-      else            ischar = 0;
-      if (ischar != oldischar || strcmp(oldblock,block) != 0) {
-         strlcpy(oldblock,block,512);
-         oldischar = ischar;
-         Int_t lblock   = strlen(block);
-         add= (Long_t)&bigbuf[bufpos];
-         hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);
-      }
-      TBranch *branch = tree->Branch(name,(void*)&bigbuf[bufpos],fullname,bufsize);
-      boolflag[i] = -10;
-      charflag[i] = 0;
-      if (itype == 4) {isabool++; boolflag[i] = bufpos; lenbool[i] = ielem;}
-      bufpos += isize*ielem;
-      if (ischar) {isachar++; charflag[i] = bufpos-1; lenchar[i] = isize*ielem;}
-      TObjArray *ll= branch->GetListOfLeaves();
-      TLeaf *leaf = (TLeaf*)ll->UncheckedAt(0);
-      if (!leaf) continue;
-      TLeafI *leafcount = (TLeafI*)leaf->GetLeafCount();
-      if (leafcount) {
-         if (leafcount->GetMaximum() <= 0) leafcount->SetMaximum(ielem);
-      }
-   }
-   Int_t cf,l;
-   for(i=1;i<=nentries;i++) {
-      hgnt(id,i,ier);
-      if (isabool) { /* if column is boolean */
-         for (j=0;j<nvar;j++) {
-            cf = boolflag[j];
-            if (cf >-1) {
-               for (l=0;l<lenbool[j];l++) {
-#ifdef R__BYTESWAP
-                  boolarr[l] = (UChar_t)bigbuf[cf+4*l];
-#else
-                  boolarr[l] = (UChar_t)bigbuf[cf+4*l+3];
-#endif
-               }
-               memcpy(&bigbuf[cf],boolarr,lenbool[j]);
-            }
-         }
-      }
-      if (isachar) { /* if column is character, set terminator */
-         for (j=0;j<nvar;j++) {
-            cf = charflag[j];
-            if (cf) {
-               bigbuf[cf] = '\0';
-               if (bigbuf[cf-1] != ' ') continue;
-               bigbuf[cf-1] = '\0';
-               if (bigbuf[cf-2] != ' ') continue;
-               bigbuf[cf-2] = '\0';
-            }
-         }
-      }
-
-      /* if optimizing cwn ntuple then look up bufpos and adjust integers to be shorts or chars */
-      if(  optcwn == 1 ) {
-         bufpos = 0;
-         for(int k=0; k<nvar;k++) {
-            hntvar2(id,k+1,PASSCHAR(name),PASSCHAR(fullname),PASSCHAR(block),nsub,itype,isize,nbits,ielem,32,64,32);
-
-            Int_t nBytesUsed = 4; /* default for integers */
-
-            if ( itype == 2 || itype == 3) {
-               if( nbits > 16) {
-		 /* do nothing for integers of 4 byte */
-               } else {
-                  if( nbits > 8 ) nBytesUsed = 2;
-                  else            nBytesUsed = 1;
-               }
-            }
-
-            if(nBytesUsed == 1) {
-               for(Int_t index = 0; index < ielem; index++) {
-		 /* shift all chars with data to be one after another */
-                  bigbuf[bufpos + index*nBytesUsed ] =  bigbuf[bufpos + index * isize];
-               }
-            } else {
-               if(nBytesUsed == 2) {
-                  for(Int_t index = 0; index < ielem; index++) {
-		    /* shift all shorts ( 2 chars) with data to be one after another */
-                     bigbuf[bufpos + index*nBytesUsed ] =  bigbuf[bufpos + index * isize];
-                     bigbuf[bufpos + index*nBytesUsed+1 ] =  bigbuf[bufpos + index * isize+1];
-                  }
-               }
-            }
-            bufpos += isize*ielem;
-            
-         }
-      }
-
-      tree->Fill();
-   }
-   tree->Print();
-   tree->Write();
-   delete tree;
-   delete [] x;
-   delete [] charflag;
-   delete [] lenchar;
-   delete [] boolflag;
-   delete [] lenbool;
-   delete [] boolarr;
-   delete [] chtag_out;
+int main (int argc, char **argv) {
+  /* For link option rpath. If the follwoing line is not written and
+     LD_LIBRARY_PATH is set, another version of root lib may be loaded. */
+  gSystem->Setenv("LD_LIBRARY_PATH","");
+  if (argc < 2) {
+    std::cout <<"Usage:   shm_monitor port [shm_name_list]" << std::endl;
+    std::cout <<"Example: shm_monitor 8080 TEST,FRED" << std::endl;
+    std::cout <<"shm_name_list:" << std::endl;
+    std::cout <<"    Should be separated by commas with no space." << std::endl;
+    std::cout <<"    If an empty string \"\" is given, all shared " << std::endl;
+    std::cout <<"    memories will be read." << std::endl;
+    std::cout <<"port:" << std::endl;
+    std::cout <<"    TCP port number of the THttpServer" << std::endl;
+    std::cout <<"Note: This program does not support Ntuples." << std::endl;
+    return 0;
+  }
+  int port;
+  std::stringstream ss(argv[1]);
+  if (!(ss >> port)) {
+    std::cout << "The port number is not valid." << std::endl;
+    return 0;
+  }
+  std::cout << "Type ctrl-c to stop the program." << std::endl;
+  while (1) {
+    if(argc == 2){
+      shms2srv("",port);
+    }else{
+      shms2srv(argv[2],port);
+    }
+    if (gSystem->ProcessEvents()) {
+      std::cout << "Error: gSystem->ProcessEvents() is not null." << std::endl;
+      break;
+    }
+    gSystem->Sleep(300);
+  }
+  return 1;
 }
