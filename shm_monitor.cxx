@@ -217,8 +217,10 @@ THttpServer* open_output_srv(int port) {
     
     TString thttpserver_str = Form("http:%d?top=pid%d_at_%s", port, gSystem->GetPid(), gSystem->HostName());
     serv = new THttpServer(thttpserver_str.Data());
+    std::cout << std::endl;
     std::cout << "Now you can have access to http://" << gSystem->HostName() << ":"
 	      << port << "/" << std::endl;
+    std::cout << "Type ctrl-c to stop the program." << std::endl;
   }
   /*else{
     if (message_counter < 1) {
@@ -601,7 +603,6 @@ int main (int argc, char **argv) {
     std::cout << "The port number is not valid." << std::endl;
     return 0;
   }
-  std::cout << "Type ctrl-c to stop the program." << std::endl;
   while (1) {
     if(argc == 2){
       shms2srv("",port);
