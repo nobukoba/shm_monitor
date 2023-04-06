@@ -1,0 +1,1 @@
+      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)

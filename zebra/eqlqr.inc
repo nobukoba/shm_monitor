@@ -1,0 +1,1 @@
+      EQUIVALENCE (LQRS,LQSYSS(7))

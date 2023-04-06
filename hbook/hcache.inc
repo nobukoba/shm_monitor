@@ -1,0 +1,4 @@
+*     Nobu c/o all 2021.09.05
+*
+*     PARAMETER (IDMXNT = 100)
+*      COMMON /HCACHE/ IDNOT(IDMXNT), IDTNOT

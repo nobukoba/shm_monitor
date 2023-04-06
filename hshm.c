@@ -19,20 +19,19 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
  
-//#define  hcreatei  hcreatei_
-//#define  hmapi     hmapi_
-//#define  hfreem    hfreem_
 #define  SHM_R      0400
 #define  SHM_W      0200
 
-//extern "C" int hcreatei(key_t *, int *, long *);
-//extern "C" int hmapi(key_t *, long *);
-//extern "C" int hfreem(long *);
-
 static int    shm_pawc;
-static void  *paddr;
+static void  *paddr = 0; /* 0 was added nobu */
 static long   len;
  
+/* Nobu added 2021.10.11
+   Nobu hfreem_cre_ -->  hfreem_map_ 2022.06.30 --> */
+static void  *paddr_map = 0;
+int hfreem_(long *);
+int hfreem_map_(long *);
+/* <-- */
 
  
 /***********************************************************************
@@ -51,8 +50,18 @@ int hcreatei_(key_t *mkey, int *size, long *comaddr)
    unsigned long   inter;
    void           *req_addr;
  
+#if !defined(DOUBLE_PRECISION)
    len = *size * 4;
- 
+#else
+   len = *size * 8;
+#endif
+
+   /* Nobu added 2021.10.11, modified 2022.06.30  --> */
+   if (paddr){
+     hfreem_(0);
+   }
+   /* <-- */
+
    /* create shared memory segment */
    if ((shm_pawc = shmget(*mkey, len, flag)) < 0) {
       perror("shmget");
@@ -71,9 +80,19 @@ int hcreatei_(key_t *mkey, int *size, long *comaddr)
    } else {
       istat    = 0;
       inter    = (unsigned long) paddr;
+#if !defined(DOUBLE_PRECISION)
       *comaddr = (long) (inter >> 2);
+#else
+      *comaddr = (long) (inter >> 3);
+#endif
    }
-   return(istat);
+    /*
+      printf("hshm.c (unsigned long)paddr %ld\n", (unsigned long)paddr);
+      printf("hshm.c comaddr %ld\n", comaddr);
+      printf("hshm.c *comaddr %ld\n", *comaddr);
+    */
+    
+    return(istat);
 }
  
 /***********************************************************************
@@ -90,7 +109,16 @@ int hmapi_(key_t *mkey, long *comaddr)
    unsigned long    inter;
    void            *req_addr;
    struct shmid_ds  shm_stat;
- 
+
+   /* Nobu added 2021.10.11, modified 2022.06.30 --> */
+   if (paddr_map){
+     hfreem_map_(0);
+   }
+   /* <-- */
+   /*
+     printf("hshm.c comaddr %ld\n", comaddr);
+     printf("hshm.c *comaddr %ld\n", *comaddr);
+   */      
    /* get id of existing shared memory segment */
    if ((shm_pawc = shmget(*mkey, 0, SHM_R | SHM_W)) < 0) {
       perror("shmget");
@@ -114,15 +142,24 @@ int hmapi_(key_t *mkey, long *comaddr)
    req_addr=(void*)(*comaddr);
    /* attach shared memory segment */
 
+   /*printf("hshm.c (unsigned long)req_addr %ld\n", (unsigned long)req_addr);*/
+
    if ((paddr = shmat(shm_pawc, req_addr, SHM_RND)) == (void *)-1) {
       perror("shmat");
       istat = -errno;
    } else {
       istat    = 0;
       inter    = (unsigned long) paddr;
+#if !defined(DOUBLE_PRECISION)
       *comaddr = (long) (inter >> 2);
+#else
+      *comaddr = (long) (inter >> 3);
+#endif
+      /*printf("hshm.c (unsigned long)paddr %ld\n", (unsigned long)paddr);
+      printf("hshm.c comaddr %ld\n", comaddr);
+      printf("hshm.c *comaddr %ld\n", *comaddr);*/
    }
-
+   
    return(istat);
 }
  
@@ -136,13 +173,18 @@ int hfreem_(long *comaddr)
 {
    int istat;
  
+   /*printf("hshm.c (unsigned long)paddr %ld\n", (unsigned long)paddr);*/
+
    /* unmaps segment from address space */
    if ((istat = shmdt(paddr)) == -1) {
       perror("shmdt");
       istat = -errno;
       return(istat);
    }
- 
+   /* Nobu added 2021.10.11 --> */
+   paddr = 0;
+   /* <-- */
+   
    /* delete shared segment */
 /*****
    if ((istat = shmctl(shm_pawc, IPC_RMID, (struct shmid_ds *)0)) == -1) {
@@ -152,3 +194,18 @@ int hfreem_(long *comaddr)
 *****/
    return(istat);
 }
+
+/* Nobu added 2021.10.11 --> */
+int hfreem_map_(long *comaddr)
+{
+   int istat;
+   /* unmaps segment from address space */
+   if ((istat = shmdt(paddr_map)) == -1) {
+      perror("shmdt");
+      istat = -errno;
+      return(istat);
+   }
+   paddr_map = 0;
+   return(istat);
+}
+/* <-- */

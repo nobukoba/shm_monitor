@@ -1,33 +1,36 @@
 TARGETS   = shm_monitor
 
-GCC_VER_GTEQ_5 = $(shell expr `gcc -dumpversion | cut -f1-2 -d.` \>= 5.0)
-ifeq ($(GCC_VER_GTEQ_5),1)
-PIEFLAGS  =  -O -no-pie
+CC        = gcc
+CXX       = g++
+FC        = gfortran
+CFLAGS    = 
+FFLAGS    = -I./ -cpp -std=legacy -Wno-argument-mismatch
+LFLAGS    = 
+
+OS_TYPE   = $(shell uname -s)
+ifeq ($(OS_TYPE),Darwin)
+# macOS
+LIBS       = -L /usr/local/lib/gcc/12/ -lgfortran
 else
-PIEFLAGS  =
+# Linux
+LIBS       = -lgfortran
 endif
 
-CC        = gcc $(PIEFLAGS)
-CXX       = g++ $(PIEFLAGS)
-FC        = gfortran $(PIEFLAGS)
-CFLAGS    = 
-FFLAGS    = -std=legacy -Wno-argument-mismatch
-LFLAGS    = 
 # Explicit version of ROOT is used
 ROOTCONF  = /home/kobayash/cern/root_v6.22.06/bin/root-config
 # Present version of ROOT is used
-# ROOTCONF  = root-config
+#ROOTCONF  = root-config
 HAS_RPATH = $(shell $(ROOTCONF) --has-rpath)
 ifeq ($(HAS_RPATH),yes)
 CXXFLAGS  = $(shell $(ROOTCONF) --cflags)
-ROOTLIBS  = $(shell $(ROOTCONF) --libs) -lRHTTP -lgfortran
+ROOTLIBS  = $(shell $(ROOTCONF) --libs) -lRHTTP $(LIBS)
 else
 CXXFLAGS  = $(shell $(ROOTCONF) --cflags)
-ROOTLIBS  = $(shell $(ROOTCONF) --libs) -lRHTTP -lgfortran -Wl,-rpath,$(shell $(ROOTCONF) --libdir) -Wl,--disable-new-dtags
+ROOTLIBS  = $(shell $(ROOTCONF) --libs) -lRHTTP $(LIBS) -Wl,-rpath,$(shell $(ROOTCONF) --libdir) -Wl,--disable-new-dtags
 endif
 
 all:	$(TARGETS)
-shm_monitor: shm_monitor.o hlimap.o hidall.o mzwork.o hcreatem.o hshm.o hmapm.o hrin2.o hcopyu.o hcopyn.o hcopyt.o zebra.o hbook.o cernlib.o kernlib.o
+shm_monitor: shm_monitor.o hlimap.o hidall.o mzwork.o hcreatem.o hshm.o hmapm.o hcopyu.o hcopyn.o hcopyt.o zebra.o hbook.o cernlib.o kernlib.o hbug.o hrdir.o hsifla.o hrdirm.o q_inc.o rzrdir.o
 	$(CXX)     $(LFLAGS) -o $@ $^ $(ROOTLIBS)
 %.o: %.cxx
 	$(CXX)     $(CXXFLAGS) -c $<
