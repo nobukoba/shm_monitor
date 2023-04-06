@@ -53,7 +53,10 @@
 ************************************************************************
 *
       CHARACTER*(*) MFILE
-      INTEGER       ICOMAD(1), IBASE(1), HMAPI
+*     INTEGER       ICOMAD(1), IBASE(1), HMAPI
+      INTEGER       IBASE(1), HMAPI
+      INTEGER*8     ICOMAD(1), IOFFST
+      INTEGER*8     LOCF
       SAVE ICOMAD
 *
 ************************************************************************
@@ -74,10 +77,32 @@ C c/o Nobu 2018/01/26 20:12:47-->
 C      ICOMAD(1) = LOC (ICOMAD(1)) - LOCB(ICOMAD(1))
 C --> Eed
 C this should be a reasonable range for IA64 architectures
-C Added Nobu 2018/01/26 20:13:07 -->
-      ICOMAD(1) = ICOMAD(1) + 2**30
+C     Added Nobu 2018/01/26 20:13:07 -->
+c     c/o by Nobu 2021.08.24
+#if !defined(DOUBLE_PRECISION)
+c     ICOMAD(1) = ICOMAD(1) + 2**30 * 4 + 2**29
+      ICOMAD(1) = ICOMAD(1) + 2**30 * 5
+c      ICOMAD(1) = 0
+#else
+      ICOMAD(1) = ICOMAD(1) + 2**31
+#endif
+c      ICOMAD(1) = LOC(IBASE(1)) + 2**30
 C --> End
+C     Preventing from segv, the following 
+c     was added. I do not know why this works?
+c     Nobu 2021.08.25 -->
+c      ICOMAD(1) = 0
+c     --> Nobu
+*      write(*,*) 'MKEY', MKEY
+*      write(*,*) 'ICOMAD', ICOMAD
+*      write(*,*) 'ICOMAD(1)', ICOMAD(1)
       HMAPM = HMAPI(MKEY, ICOMAD)
       IOFFST = ICOMAD(1) - LOCF(IBASE(1))
-*
+c      IOFFST = ICOMAD(1) - LOC(IBASE(1))/4
+c     IOFFST = (ICOMAD(1)*4 - LOCF(IBASE(1)))/4
+*      write(*,*) 'hmapm.f IOFFST ', IOFFST
+*      write(*,*) 'hmapm.f ICOMAD(1) ', ICOMAD(1)
+*      write(*,*) 'hmapm.f LOCF(IBASE(1)) ', LOCF(IBASE(1))
+*      write(*,*) 'hmapm.f LOC(IBASE(1)) ', LOC(IBASE(1))/4
+*     
       END

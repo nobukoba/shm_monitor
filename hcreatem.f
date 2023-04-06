@@ -38,7 +38,10 @@
 ************************************************************************
 *
       CHARACTER*(*) MFILE
-      INTEGER       ICOMAD(1), ISIZE, IBASE(1), HCREATEI
+*      INTEGER       ICOMAD(1), ISIZE, IBASE(1), HCREATEI
+      INTEGER       ISIZE, IBASE(1), HCREATEI
+      INTEGER*8     ICOMAD(1), IOFFST
+      INTEGER*8     LOCF
       SAVE ICOMAD
 *
       PARAMETER (MFEN=100000000)
@@ -56,9 +59,18 @@ C      ICOMAD(1) = LOC (ICOMAD(1)) - LOCB(ICOMAD(1))
 C --> Eed
 C this should be a reasonable range for IA64 architectures
 C Added Nobu 2018/01/26 20:16:03 -->
+#if !defined(DOUBLE_PRECISION)
       ICOMAD(1) = ICOMAD(1) + 2**30
+#else
+      ICOMAD(1) = ICOMAD(1) + 2**31
+#endif
+      ICOMAD(1) = LOC(IBASE(1)) + 2**30
 C --> End
       HCREATEM = HCREATEI(MKEY, ISIZE, ICOMAD)
       IOFFST = ICOMAD(1) - LOCF(IBASE(1))
+*      write(*,*) 'hcreatem.f IOFFST ', IOFFST
+*      write(*,*) 'hcreatem.f ICOMAD(1) ', ICOMAD(1)
+*      write(*,*) 'hcreatem.f LOCF(IBASE(1)) ', LOCF(IBASE(1))
+*      IOFFST = ICOMAD(1) - LOC(IBASE(1))/4
 *
       END

@@ -13,9 +13,7 @@
 * Zebra
 *
 *
-* c/o Nobu -->
 *#include "zebra/pilot.h"
-* --> c/o Nobu
       SUBROUTINE MZWORK (IXSTOR,DFIRST,DLAST,IFLAGP)
 
 C-    Allocate working space, user called
@@ -27,52 +25,11 @@ C-             2  vary  only DLAST  limit, keep links and common data
 C-             3  reset only DFIRST limit, zero all links
 C-             4  vary  only DFIRST limit, keep common links
 
-* c/o Nobu see minicern/zebra.f and zmatch.inc -->
-*#include "zebra/zmach.inc"
-* --> c/o Nobu
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-
-* c/o Nobu see minicern/zebra.f and mzlink.F -->
-*#include "zebra/zstate.inc"
-*#include "zebra/zunit.inc"
-*#include "zebra/zvfaut.inc"
-*#include "zebra/mqsys.inc"
-* --> c/o Nobu
-* Added Nobu see minicern/zebra.f and mzlink.F -->
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-* --> Added Nobu
+#include "zebra/zmach.inc"
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/zvfaut.inc"
+#include "zebra/mqsys.inc"
 
       INTEGER      DFIRST(9), DLAST(9), IFLAGP(9)
 * c/o Nobu see minicern/zebra.f and mzlink.F -->
@@ -96,26 +53,25 @@ C-             4  vary  only DFIRST limit, keep common links
 *#include "zebra/q_jbit.inc"
 * --> c/o Nobu
 * Added Nobu see minicern/zebra.f and rzfile -->
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
+*      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
 * --> Added Nobu
-
-* c/o Nobu see minicern/zebra.f and mzlink.F -->
 *#include "zebra/q_jbyt.inc"
 *#include "zebra/q_locf.inc"
-* --> c/o Nobu
-* Added Nobu see minicern/zebra.f and mzlink.F -->
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
-* --> Added Nobu
+*      write(*,*) 'mzwork 1 NQOFFT(1+1)', NQOFFT(1+1)
+*      write(*,*) 'mzwork 1 LQSTA(NQOFFT(1+1)+1)'
+*      write(*,*) LQSTA(NQOFFT(1+1)+1)
+*      write(*,*) 'mzwork 1 LQSTA(NQOFFT(1+1)+21)'
+*      write(*,*) LQSTA(NQOFFT(1+1)+21)
       IFLAG = IFLAGP(1)
+*      write(*,*) 'mzwork 1 IFLAG', IFLAG
 
-* c/o Nobu see minicern/zebra.f and mzlink.F -->
 *#include "zebra/qtrace.inc"
+      MQTRAC(NQTRAC+1) = NAMESR(1)
+      MQTRAC(NQTRAC+2) = NAMESR(2)
+      NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
 *#include "zebra/qstore.inc"
-* --> c/o Nobu
-* Added Nobu see minicern/zebra.f and mzlink.F -->
       IF (JBYT(IXSTOR,27,6).NE.JQSTOR)  CALL MZSDIV (IXSTOR,-7)
-* --> Added Nobu
-
 
 * c/o Nobu see minicern/zebra.f and mzlink.F -->
 *#if defined(CERNLIB_QDEBUG)
@@ -139,6 +95,9 @@ C-             4  vary  only DFIRST limit, keep common links
 
 C----              Check valid parameters
 
+*      write(*,*) 'mzwork 2 NEWL, NEWD, NQREF', NEWL, NEWD, NQREF
+*      write(*,*) 'mzwork 2 LQEND(KQT+2)', LQEND(KQT+2)
+c Nobu c/o 20210905 for 64 bit addressing
       IF (NEWL.LT.NQREF)           GO TO 92
       IF (NEWD.LT.NEWL)            GO TO 93
       IF (IFLAG.GE.3)              GO TO 31
@@ -217,13 +176,14 @@ C----              Set new limits
 * c/o Nobu see  minicern/zebra.f and mzgar1.F -->
 *#endif
 * --> c/o Nobu
-* c/o Nobu see  minicern/zebra.f and mzlink.F -->
 *#include "zebra/qtrace99.inc"
-* --> c/o Nobu
-
-* Added Nobu see minicern/zebra.f and mzlink.F -->
   999 NQTRAC = NQTRAC - 2
-* --> Added Nobu
+*      write(*,*) 'mzwork * NQOFFT(1+1)', NQOFFT(1+1)
+*      write(*,*) 'mzwork * LQSTA(NQOFFT(1+1)+1)'
+*      write(*,*) LQSTA(NQOFFT(1+1)+1)
+*      write(*,*) 'mzwork * LQSTA(NQOFFT(1+1)+21)'
+*      write(*,*) LQSTA(NQOFFT(1+1)+21)
+
       RETURN
 
 C------            Error conditions
@@ -237,11 +197,8 @@ C------            Error conditions
       IQUEST(12) = NEWL
       IQUEST(13) = NEWD
       IQUEST(14) = IFLAG
-* c/o Nobu see  minicern/zebra.f and mzlink.F -->
 *#include "zebra/qtofatal.inc"
-* --> c/o Nobu
-* Added Nobu see minicern/zebra.f and mzlink.F -->
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
-* --> Added Nobu
+*      CALL ZFATAL
       END

@@ -7,107 +7,67 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZEBRA (LIST)
-      COMMON /ZBCD/  IQNUM2(11),IQLETT(26),IQNUM(10),   IQPLUS,IQMINS
-     +,              IQSTAR,IQSLAS,IQOPEN,IQCLOS,IQDOLL,IQEQU, IQBLAN
-     +,              IQCOMA,IQDOT, IQNUMB,IQAPO, IQEXCL,IQCOLO,IQQUOT
-     +,              IQUNDE,IQCLSQ,IQAND, IQAT,  IQQUES,IQOPSQ,IQGREA
-     +,              IQLESS,IQREVE,IQCIRC,IQSEMI,IQPERC,  IQLOWL(26)
-     +,              IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV,  IQILEG
-     +,              NQHOL0,NQHOLL(95)
-      CHARACTER  CQALLC*96
-      COMMON /ZBCDCH/ CQALLC
-                      CHARACTER*1  CQLETT(96), CQNUM(10)
-                      EQUIVALENCE (CQLETT(1),CQALLC(1:1))
-                      EQUIVALENCE (CQNUM(1), CQALLC(27:27))
-      PARAMETER     (NQTCET=256)
-      COMMON /ZCETA/ IQCETA(256),IQTCET(256)
-      COMMON /ZHEADP/IQHEAD(20),IQDATE,IQTIME,IQPAGE,NQPAGE(4)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-      COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCL/  NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
-     +,              LQSUP,NQBIA, NQIOSV(3)
-      COMMON /JZUC/  LQJZ,LQUP,LQDW,LQSV,LQAN, JQLEV,JQFLAG(10)
-      COMMON/RZCOUNT/RZXIO(2)
-      COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
-     +,              IZRECL,IMODEC,IMODEH
-      PARAMETER     (MAXFILES=128, MAXSTRIP=21)
-      CHARACTER*128  RZNAMES(MAXFILES),RZSFILE(MAXSTRIP)
-      COMMON/RZCSTRC/RZNAMES,RZSFILE
-      COMMON/RZCSTRI/ISLAST,ISTRIP(MAXFILES),NSTRIP(MAXFILES),
-     +                      NRSTRIP(MAXFILES)
+#include "zebra/zbcd.inc"
+#include "zebra/zbcdch.inc"
+#include "zebra/zceta.inc"
+#include "zebra/zheadp.inc"
+#include "zebra/zmach.inc"
+#include "zebra/znatur.inc"
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsysh.inc"
+#include "zebra/jzuc.inc"
+#include "zebra/mzcl.inc"
+#include "zebra/rzcount.inc"
+#include "zebra/rzclun.inc"
+#include "zebra/rzcstr.inc"
       CHARACTER*4 CVERSN
       DIMENSION    LIST(9), INKEYS(3)
-      DATA  INKEYS / 4HEBRA, 4HINIT, 4HDONE /
-   12 NQSTOR = -1
+      INTEGER*4 INKEYS4(3)
+      DATA  INKEYS4 / 4HEBRA, 4HINIT, 4HDONE /
+      do i = 1, 3
+         INKEYS(i) = INKEYS4(i)
+      enddo
+*      write(*,*) 'ZEBRA 1'
+      
+ 12   NQSTOR = -1
       JQSTOR = -99
       CALL VZEROI (NQOFFT,66)
       CALL MZINCO (LIST)
+*      write(*,*) 'ZEBRA 2'
       NQDCUT = 201
       NQWCUT = 500
       CALL UCOPYI (INKEYS,MQKEYS,3)
       CALL VZEROI (NQLN, 28)
       CALL VZEROI (LQJZ, 16)
       CALL VZEROI (NSTRIP, MAXFILES)
+*      write(*,*) 'ZEBRA 3'
       JQLEV = -1
       RZXIO(1) = 0.
       RZXIO(2) = 0.
       IMODEH   = 0
+*      write(*,*) 'ZEBRA 4'
       CALL VFILL (IQFENC,4,IQNIL)
+*      write(*,*) 'ZEBRA 5'
       NQINIT = -1
+*      write(*,*) 'ZEBRA 6'
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZINCO (LIST)
-      COMMON /ZBCD/  IQNUM2(11),IQLETT(26),IQNUM(10),   IQPLUS,IQMINS
-     +,              IQSTAR,IQSLAS,IQOPEN,IQCLOS,IQDOLL,IQEQU, IQBLAN
-     +,              IQCOMA,IQDOT, IQNUMB,IQAPO, IQEXCL,IQCOLO,IQQUOT
-     +,              IQUNDE,IQCLSQ,IQAND, IQAT,  IQQUES,IQOPSQ,IQGREA
-     +,              IQLESS,IQREVE,IQCIRC,IQSEMI,IQPERC,  IQLOWL(26)
-     +,              IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV,  IQILEG
-     +,              NQHOL0,NQHOLL(95)
-      CHARACTER  CQALLC*96
-      COMMON /ZBCDCH/ CQALLC
-                      CHARACTER*1  CQLETT(96), CQNUM(10)
-                      EQUIVALENCE (CQLETT(1),CQALLC(1:1))
-                      EQUIVALENCE (CQNUM(1), CQALLC(27:27))
-      PARAMETER     (NQTCET=256)
-      COMMON /ZCETA/ IQCETA(256),IQTCET(256)
-      COMMON /ZHEADP/IQHEAD(20),IQDATE,IQTIME,IQPAGE,NQPAGE(4)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-      COMMON /ZNATUR/QPI2,QPI,QPIBY2,QPBYHR
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      COMMON /QUEST/ IQUEST(100)
+#include "zebra/zbcd.inc"
+#include "zebra/zbcdch.inc"
+#include "zebra/zceta.inc"
+#include "zebra/zheadp.inc"
+#include "zebra/zmach.inc"
+#include "zebra/znatur.inc"
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/zvfaut.inc"
+#include "zebra/quest.inc"
       DIMENSION LIST(9)
-      JBIT(IZW,IZP)     = IAND(ISHFT(IZW,-(IZP-1)),1)
+*#include "zebra/q_jbit.inc"
       CALL VZEROI (IQUEST,100)
       CALL VZEROI (IQVID,18)
       CALL VZEROI (NQPHAS,15)
@@ -220,68 +180,63 @@
 
       SUBROUTINE MZSTOR (IXSTOR,CHNAME,CHOPT
      +,                  IFENCE,LV,LLR,LLD,LIMIT,LAST)
-      COMMON /ZBCD/  IQNUM2(11),IQLETT(26),IQNUM(10),   IQPLUS,IQMINS
-     +,              IQSTAR,IQSLAS,IQOPEN,IQCLOS,IQDOLL,IQEQU, IQBLAN
-     +,              IQCOMA,IQDOT, IQNUMB,IQAPO, IQEXCL,IQCOLO,IQQUOT
-     +,              IQUNDE,IQCLSQ,IQAND, IQAT,  IQQUES,IQOPSQ,IQGREA
-     +,              IQLESS,IQREVE,IQCIRC,IQSEMI,IQPERC,  IQLOWL(26)
-     +,              IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV,  IQILEG
-     +,              NQHOL0,NQHOLL(95)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      PARAMETER            (NQWKTT=2560)
-      COMMON /MZCWK/ IQWKTB(NQWKTT), IQWKFZ(NQWKTT)
+#include "zebra/zbcd.inc"
+#include "zebra/zmach.inc"
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzcwk.inc"
 *
       DIMENSION    IXSTOR(9),IFENCE(9)
       DIMENSION    LV(9),LLR(9),LLD(9),LIMIT(9),LAST(9)
       DIMENSION    MMSYSL(5), NAMELA(2), NAMESY(2)
+* Nobu added      
+      INTEGER*4    MMSYSL4(5), NAMELA4(2), NAMESY4(2), NAMWSP4, NAMEDV4
+
       CHARACTER    *(*) CHNAME,CHOPT
       DIMENSION    NAMESR(2)
       DATA  NAMESR / 4HMZST, 4HOR   /
-      DATA  MMSYSL / 4HSYSL,0,0,101,2/
-      DATA  NAMELA / 4Hsyst, 4Hem   /
-      DATA  NAMESY / 4Hsyst, 4Hem   /
-      DATA  NAMWSP / 4Hqwsp /
-      DATA  NAMEDV / 4HQDIV /
+*      DATA  MMSYSL / 4HSYSL,0,0,101,2/
+*      DATA  NAMELA / 4Hsyst, 4Hem   /
+*      DATA  NAMESY / 4Hsyst, 4Hem   /
+*      DATA  NAMWSP / 4Hqwsp /
+*      DATA  NAMEDV / 4HQDIV /
+      DATA  MMSYSL4 / 4HSYSL,0,0,101,2/
+      DATA  NAMELA4 / 4Hsyst, 4Hem   /
+      DATA  NAMESY4 / 4Hsyst, 4Hem   /
+      DATA  NAMWSP4 / 4Hqwsp /
+      DATA  NAMEDV4 / 4HQDIV /
+      INTEGER*8  LQATAB8, LQASTO8
+
+*#include "zebra/q_sbit1.inc"
+*#include "zebra/q_shiftl.inc"
+*#include "zebra/q_locf.inc"
+
+*      write(*,*) 'mzstor 1 NQOFFT(1+1)', NQOFFT(1+1)
+*      write(*,*) 'mzstor 1 LQSTA(NQOFFT(1+1)+1)'
+*      write(*,*) LQSTA(NQOFFT(1+1)+1)
+*      write(*,*) 'mzstor 1 LQSTA(NQOFFT(1+1)+21)'
+*      write(*,*) LQSTA(NQOFFT(1+1)+21)
+
+      do i = 1, 5
+         MMSYSL(i) = MMSYSL4(i)
+      enddo
+      do i = 1, 2
+         NAMELA(i) = NAMELA4(i)
+         NAMESY(i) = NAMESY4(i)
+      enddo
+      NAMWSP = NAMWSP4
+      NAMEVD = NAMEDV4
       
-      MSBIT1 (IZW,IZP)   = IOR  (IZW,     ISHFT(1,IZP-1))
       IF (NQSTOR.NE.-1)            GO TO 13
       CALL VZEROI (NQOFFT,32)
       LQATAB = LOCF (IQTABV(1)) - 1
+      LQATAB8 = LOC (IQTABV(1))/4 - 1
       LQASTO = LOCF (LQ(1)) - 1
+      LQASTO8 = LOC(LQ(1))/4 - 1
       LQBTIS = LQATAB - LQASTO
-
+      LQBTIS = LQATAB8 - LQASTO8
+*      write(*,*) 'LQASTO, LQASTO8', LQASTO, LQASTO8
 
 c Nobu
 c      print*, 'IQWKTB(1)',IQWKTB(1)
@@ -290,9 +245,12 @@ c      print*, 'LOC(LQPSTO)',LOC(LQPSTO)
 c      print*, 'LOC(IQTABV(1))',LOC(IQTABV(1))
 c      print*, 'LOC(LQFSTA(1))',LOC(LQFSTA(1))
 c Nobu
-      LQWKTB = LOCF(IQWKTB(1)) - LQASTO
-      LQWKFZ = LOCF(IQWKFZ(1)) - LQASTO
-      NQTSYS = LOCF(IQDN2(20)) - LQATAB
+c      LQWKTB = LOCF(IQWKTB(1)) - LQASTO
+c      LQWKFZ = LOCF(IQWKFZ(1)) - LQASTO
+c      NQTSYS = LOCF(IQDN2(20)) - LQATAB
+      LQWKTB = LOC(IQWKTB(1))/4 - LQASTO8
+      LQWKFZ = LOC(IQWKFZ(1))/4 - LQASTO8
+      NQTSYS = LOC(IQDN2(20))/4 - LQATAB8
       NQWKTB = NQWKTT
       KQFT = 342
       IF (NQLOGD.GE.-1)
@@ -300,9 +258,11 @@ c Nobu
  9011 FORMAT (1X/' MZSTOR.  ZEBRA table base TAB(0) in /MZCC/ at adr'
      F,I12,1X,Z11,' HEX')
    13 CONTINUE
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       CALL UOPTC (CHOPT,'Q:',IQUEST)
       LOGQ   = IQUEST(1)
       IFLSPL = IQUEST(2)
@@ -310,6 +270,12 @@ c Nobu
       CALL VZEROI (KQT,27)
       LQSTOR = LOCF(LV(1)) - 1
       KQS    = LQSTOR - LQASTO
+c      KQS    = LOCF(LV(1)) - 1 - LQASTO8
+c      if(KQS .GT. 0) then
+c         KQS    = LOC(LV(1))/4 - 1 - LQASTO8
+c      endif
+*      write(*,*) 'MZSTOR KQS', KQS
+*      write(*,*) 'LQSTOR, LQASTO', LQSTOR, LQASTO
       NFEND  = (LQSTOR+1) - LOCF(IFENCE(1))
       NQFEND = NFEND
       NQSNAM(1) = IQBLAN
@@ -323,8 +289,17 @@ c Nobu
       NQLINK = NQREF
       LQ2END = LOCF(LIMIT(1)) - LQSTOR
       NDATAT = LOCF(LAST(1))  - LQSTOR
+*      write(*,*) 'NDATAT, LQSTOR', NDATAT, LQSTOR
+c      IF (NDATAT.LT.0) THEN
+c         NDATAT = LOC(LAST(1))/4 -  (LOC(LV(1))/4 - 1)
+c      ENDIF 
+*      write(*,*) 'LOC(LAST(1))/4', LOC(LAST(1))/4
+*      write(*,*) '(LOC(LV(1))/4 - 1)', (LOC(LV(1))/4 - 1)
+*      write(*,*) 'NQSTRU, NQREF, LQ2END, NDATAT'
+*      write(*,*) NQSTRU, NQREF, LQ2END, NDATAT
       NDATA = NDATAT
       LOCT  = LQATAB
+*      write(*,*) 'L330 KQS, NDATA ', KQS, NDATA
       IF (JQSTOR.NE.0)  THEN
           NDATA = NDATA  - NQTSYS
           NQSNAM(6) = NDATA
@@ -347,18 +322,38 @@ c Nobu
       NSYS   =  400
       NQMINR =   40
       NWF    = 2000
+*      write(*,*) 'mzstor L353 KQS, NDATA ', KQS, NDATA
+*      write(*,*) 'mzstor 10 NQSTRU', NQSTRU
       IF (JQSTOR.EQ.0)  NQMINR=164
+*      write(*,*) 'mzstor 11'
       IF (NQSTRU.LT.0)               GO TO 91
+*      write(*,*) 'mzstor 12'
       IF (NQREF .LT.NQSTRU)          GO TO 91
+*      write(*,*) 'mzstor 13'
+*      write(*,*) 'NDATAT', NDATAT
+*      write(*,*) 'NQLINK,NWF', NQLINK,NWF
+*      write(*,*) 'NQLINK+NWF', NQLINK+NWF
+*     nobu c/o 20210905
       IF (NDATAT.LT.NQLINK+NWF)      GO TO 91
+*      write(*,*) 'mzstor 14'
+*      write(*,*) 'NLQ2END', NDATAT
+*      write(*,*) 'NQLINK, NQMINR', NQLINK, NQMINR
+*      write(*,*) 'NQLINK+NWF', NQLINK+NQMINR
+*     nobu c/o 20210905
       IF (LQ2END.LT.NQLINK+NQMINR)   GO TO 91
+*      write(*,*) 'mzstor 15'
+*      write(*,*) 'NFEND', NFEND
       IF (NFEND .LT.1)               GO TO 92
+*      write(*,*) 'mzstor 16'
       IF (NFEND .GE.1001)            GO TO 92
+*      write(*,*) 'mzstor 17'
       IF (IFLSPL.EQ.1)  THEN
           IF (JQSTOR.EQ.0)           GO TO 96
           GO TO 39
         ENDIF
+*      write(*,*) 'mzstor 18'
       IF (JQSTOR.EQ.0)             GO TO 41
+*      write(*,*) 'mzstor 19'
       KSA = KQS - NQFEND
       KSE = KQS + NDATAT
       DO 36  JSTO=1,JQSTOR
@@ -368,15 +363,23 @@ c Nobu
       JSE = JS  + LQSTA(JT+21)
       JTA = JT  + LQBTIS
       JTE = JTA + NQTSYS
+*      write(*,*) 'MZSOTR L375 KQS, NDATA ', KQS, NDATA
       IF (KSE.GT.JTA .AND. KSA.LT.JTE)    GO TO 94
       IF (KSE.GT.JSA .AND. KSA.LT.JSE)    GO TO 95
    36 CONTINUE
    39 IF (JQSTOR.GE.16)            GO TO 93
    41 NQOFFT(JQSTOR+1) = KQT
+*      write(*,*) 'MZSOTR L382 KQS, NDATA ', KQS, NDATA
       NQOFFS(JQSTOR+1) = KQS
       NQALLO(JQSTOR+1) = IFLSPL
+*      write(*,*) 'MZSOTR L385 KQS, NDATA ', KQS, NDATA
+*      write(*,*) 'MZSOTR NQTSYS ', NQTSYS
+*      write(*,*) 'MZSOTR LOCF(KQS) ', LOCF(KQS)
+*      write(*,*) 'MZSOTR LOCF(IQTABV(KQT+1)) ', LOCF(IQTABV(KQT+1))
       CALL VZEROI (IQTABV(KQT+1),NQTSYS)
+*      write(*,*) 'MZSOTR L387 KQS, NDATA ', KQS, NDATA
       CALL VBLANK (IQDN1(KQT+1), 40)
+*      write(*,*) 'MZSOTR L387 KQS, NDATA ', KQS, NDATA
       NQSTOR = NQSTOR + 1
       LQ(KQS+NDATA-1) = IQNIL
       LQ(KQS+NDATA)   = IQNIL
@@ -402,6 +405,8 @@ c Nobu
       IQRNO(KQT+2)  = 9437183
       IQDN1(KQT+2)  = NAMEDV
       IQDN2(KQT+2)  = IQNUM(3)
+*      write(*,*) 'mzstor * NQLINK, KQT', NQLINK, KQT
+*      write(*,*) 'mzstor * LQSTA(KQT+1)', LQSTA(KQT+1) 
       LQSTA(KQT+1)  = NQLINK + 1
       LQEND(KQT+1)  = LQSTA(KQT+1)
       NQDMAX(KQT+1) = NDATA
@@ -418,6 +423,7 @@ c Nobu
           IF (IXSTOR(1).EQ.0)      GO TO 71
         ENDIF
       IDN = ISHFT (JQSTOR,26)
+*      write(*,*) 'mzstor IDN, JQSTOR', IDN, JQSTOR
       IXSTOR(1) = IDN
    71 JQDIVI = JQDVSY
       CALL MZLIFT (-7,LSYS,0,2,MMSYSL,0)
@@ -425,7 +431,12 @@ c Nobu
       NALL   = LOCF(IQTDUM(1)) - LOCF(LQSYSS(1))
       NSTR   = LOCF(LQSYSR(1)) - LOCF(LQSYSS(1))
       LOCAR  = LOCF (LQSYSS(KQT+1)) - LQSTOR
+c      IF (LOCAR.LT.0) THEN
+c         LOCAR = LOCAR + 2**30
+c      ENDIF
       LOCARE = LOCAR + NALL
+*      write(*,*) 'LOCAR, NALL, LOCARE, NSTR'
+*      write(*,*) LOCAR, NALL, LOCARE, NSTR
       IQ(KQS+LSYS+1) = 11
       IQ(KQS+LSYS+2) = 1
       IQ(KQS+LSYS+3) = 1 + NQLINK
@@ -461,25 +472,20 @@ c Nobu
       IQUEST(17) = NDATAT
       IQUEST(18) = NQMINR
       IQUEST(19) = NWF
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZOPEN(LUNIN,CHDIR,CFNAME,CHOPTT,LRECL,ISTAT)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
-      COMMON/RZCKEY/IHEAD(3),KEY(100),KEY2(100),KEYDUM(50)
-      COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
-     +,              IZRECL,IMODEC,IMODEH
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /RZBUFF/ ITEST(8704)
-      PARAMETER     (MAXFILES=128, MAXSTRIP=21)
-      CHARACTER*128  RZNAMES(MAXFILES),RZSFILE(MAXSTRIP)
-      COMMON/RZCSTRC/RZNAMES,RZSFILE
-      COMMON/RZCSTRI/ISLAST,ISTRIP(MAXFILES),NSTRIP(MAXFILES),
-     +                      NRSTRIP(MAXFILES)
+#include "zebra/zunit.inc"
+#include "zebra/rzckey.inc"
+#include "zebra/rzclun.inc"
+#include "zebra/quest.inc"
+#include "zebra/rzbuff.inc"
       integer cfstat,statf,info(12)
       CHARACTER*(*) CFNAME,CHDIR,CHOPTT
       CHARACTER*9   SPACES
@@ -707,49 +713,15 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZIODO(LUNRZ,JREC,IREC1,IBUF,IRW)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
-     +, LTEMP,LCORD,LFROM
-      EQUIVALENCE (LQRS,LQSYSS(7))
-      COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
-     +, IZRECL,IMODEC,IMODEH
-      COMMON /RZBUFF/ ITEST(8704)
-      COMMON/RZCOUNT/RZXIO(2)
-      PARAMETER (MAXFILES=128, MAXSTRIP=21)
-      CHARACTER*128 RZNAMES(MAXFILES),RZSFILE(MAXSTRIP)
-      COMMON/RZCSTRC/RZNAMES,RZSFILE
-      COMMON/RZCSTRI/ISLAST,ISTRIP(MAXFILES),NSTRIP(MAXFILES),
-     + NRSTRIP(MAXFILES)
+#include "zebra/zunit.inc"
+#include "zebra/rzcl.inc"
+#include "zebra/rzclun.inc"
+#include "zebra/rzbuff.inc"
+#include "zebra/rzcount.inc"
+#include "zebra/rzcstr.inc"
       DIMENSION IBUF(JREC)
       PARAMETER (MEDIUM=0)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
       RZXIO(IRW) = RZXIO(IRW) + JREC
       IREC=IREC1
       IF(LUNRZ.GT.0)THEN
@@ -786,7 +758,7 @@ c Nobu
                   CALL CFSEEK(LUNRZ-1000,MEDIUM,IZRECL,IREC-1,ISTAT)
                   IF(ISTAT.NE.0) GOTO 20
                   print*,'>>>>>> CALL CFPUT()'
-******            CALL CFPUT(LUNRZ-1000,MEDIUM,JREC,IBUF,ISTAT)
+*                  CALL CFPUT(LUNRZ-1000,MEDIUM,JREC,IBUF,ISTAT)
                   IF(ISTAT.NE.0) GOTO 20
                ENDIF
                IF(IMODEX.NE.0) CALL VXINVB(IBUF,JREC)
@@ -812,44 +784,9 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZVCYC(LTAD)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
-     +,              LTEMP,LCORD,LFROM
-      EQUIVALENCE (LQRS,LQSYSS(7))
-      PARAMETER (KUP=5,KPW1=7,KNCH=9,KDATEC=10,KDATEM=11,KQUOTA=12,
-     +           KRUSED=13,KWUSED=14,KMEGA=15,KRZVER=16,KIRIN=17,
-     +           KIROUT=18,KRLOUT=19,KIP1=20,KNFREE=22,KNSD=23,KLD=24,
-     +           KLB=25,KLS=26,KLK=27,KLF=28,KLC=29,KLE=30,KNKEYS=31,
-     +           KNWKEY=32,KKDES=33,KNSIZE=253,KEX=6,KNMAX=100)
-      INTEGER        KLCYCL, KPPCYC, KFRCYC, KSRCYC, KFLCYC, KORCYC,
-     +               KCNCYC, KNWCYC, KKYCYC, KVSCYC
-      COMMON/RZCYCLE/KLCYCL, KPPCYC, KFRCYC, KSRCYC, KFLCYC, KORCYC,
-     +               KCNCYC, KNWCYC, KKYCYC, KVSCYC
+#include "zebra/rzcl.inc"
+#include "zebra/rzk.inc"
+#include "zebra/rzcycle.inc"
       IF (LTAD.EQ.0) GO TO 99
       IF (IQ(KQSP+LTAD+KRZVER).EQ.0) THEN
          KLCYCL = 4
@@ -880,49 +817,16 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZIN(IXDIV,LSUP,JBIAS,KEYU,ICYCLE,CHOPT)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
-     +,              LTEMP,LCORD,LFROM
-      EQUIVALENCE (LQRS,LQSYSS(7))
-      COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
-     +,              IZRECL,IMODEC,IMODEH
-      PARAMETER (KUP=5,KPW1=7,KNCH=9,KDATEC=10,KDATEM=11,KQUOTA=12,
-     +           KRUSED=13,KWUSED=14,KMEGA=15,KRZVER=16,KIRIN=17,
-     +           KIROUT=18,KRLOUT=19,KIP1=20,KNFREE=22,KNSD=23,KLD=24,
-     +           KLB=25,KLS=26,KLK=27,KLF=28,KLC=29,KLE=30,KNKEYS=31,
-     +           KNWKEY=32,KKDES=33,KNSIZE=253,KEX=6,KNMAX=100)
+#include "zebra/rzcl.inc"
+#include "zebra/rzclun.inc"
+#include "zebra/rzk.inc"
       CHARACTER*(*) CHOPT
       DIMENSION KEYU(*)
       DIMENSION LSUP(1),JBIAS(1),IQK(10),IQKS(10)
       EQUIVALENCE (IOPTA,IQUEST(91)), (IOPTC,IQUEST(92))
      +,      (IOPTD,IQUEST(93)), (IOPTN,IQUEST(94)), (IOPTR,IQUEST(95))
      +,      (IOPTS,IQUEST(96))
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
       LRIN=LQ(KQSP+LTOP-7)
       IF(LRIN.EQ.0)THEN
          CALL MZBOOK(JQPDVS,LRIN,LTOP,-7,'RZIN',0,0,LREC+1,2,-1)
@@ -974,62 +878,18 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZINS(IXDIVP,LSUPP,JBIASP,LBANK)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/  MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +,              MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +,              IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +,              LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +,                         LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +,              LQMTC1,LQMTC2, NQFRTC,NQLIVE
-      COMMON /MZIOC/ NWFOAV,NWFOTT,NWFODN,NWFORE,IFOCON(3)
-     +,              MFOSAV(2),  JFOEND,JFOREP,JFOCUR,MFO(200)
-      COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      COMMON /FZCI/  LUNI,LUNNI,IXDIVI,LTEMPI,IEVFLI
-     +,              MSTATI,MEDIUI,IFIFOI,IDAFOI,IACMOI,IUPAKI
-     +,              IADOPI,IACTVI,INCBPI,LOGLVI,MAXREI,  ISTENI
-     +,              LBPARI, L4STOI,L4STAI,L4CURI,L4ENDI
-     +,              IFLAGI,NFASTI,N4SKII,N4RESI,N4DONI,N4ENDI
-     +,              IOPTIE,IOPTIR,IOPTIS,IOPTIA,IOPTIT,IOPTID
-     +,                     IOPTIF,IOPTIG,IOPTIH,IOPTI2(4)
-     +,              IDI(2),IPILI(4),NWTXI,NWSEGI,NWTABI,NWBKI,LENTRI
-     +,              NWUHCI,IOCHI(16),NWUMXI,NWUHI,NWIOI
-     +,              NWRDAI,NRECAI,LUHEAI,JRETCD,JERROR,NWERR
-      PARAMETER      (JAUIOC=50, JAUSEG=68, JAUEAR=130)
-      COMMON /FZCSEG/NQSEG,IQSEGH(2,20),IQSEGD(20),IQSGLU,IQSGWK
-      COMMON /FZCOCC/NQOCC,IQOCDV(20),IQOCSP(20)
-      COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
-     +,              IZRECL,IMODEC,IMODEH
+#include "zebra/zmach.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
+#include "zebra/mzioc.inc"
+#include "zebra/mzcn.inc"
+#include "zebra/fzci.inc"
+#include "zebra/fzcseg.inc"
+#include "zebra/fzcocc.inc"
+#include "zebra/rzclun.inc"
       DIMENSION    IXDIVP(9),LSUPP(9),JBIASP(9),IDUM(3)
       EQUIVALENCE (IOPTR,IQUEST(95))
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
       IXDIVI = IXDIVP(1)
       JRETCD = 0
       JERROR = 0
@@ -1146,13 +1006,7 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE ZITOH (INTV,IHOLL,NP)
-      COMMON /ZBCD/  IQNUM2(11),IQLETT(26),IQNUM(10),   IQPLUS,IQMINS
-     +,              IQSTAR,IQSLAS,IQOPEN,IQCLOS,IQDOLL,IQEQU, IQBLAN
-     +,              IQCOMA,IQDOT, IQNUMB,IQAPO, IQEXCL,IQCOLO,IQQUOT
-     +,              IQUNDE,IQCLSQ,IQAND, IQAT,  IQQUES,IQOPSQ,IQGREA
-     +,              IQLESS,IQREVE,IQCIRC,IQSEMI,IQPERC,  IQLOWL(26)
-     +,              IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV,  IQILEG
-     +,              NQHOL0,NQHOLL(95)
+#include "zebra/zbcd.inc"
       COMMON /SLATE/ DUMMY(8), MM(4), DUMB(28)
       DIMENSION    INTV(99), IHOLL(99), NP(9)
       DIMENSION    MPAK(2)
@@ -1161,7 +1015,8 @@ c Nobu
       DO 39  JW=1,N
       CALL UPKBYT (INTV(JW),1,MM(1),4,MPAK(1))
       DO 16  J=1,4
-      JV = MM(J)
+*         write(*,*) 'ZITOH MM(J) ',MM(J)
+         JV = MM(J)
       IF (JV.EQ.0)  JV=45
    16 MM(J) = IQLETT(JV)
       CALL UBUNCH (MM(1),IHOLL(JW),4)
@@ -1171,34 +1026,9 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZRESV
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      JBIT(IZW,IZP)     = IAND(ISHFT(IZW,-(IZP-1)),1)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+#include "zebra/mqsys.inc"
+*#include "zebra/q_jbit.inc"
+*#include "zebra/q_jbyt.inc"
       JQDIVR = JQDIVI
       IF (JQDIVR.LT.3)             GO TO 41
       JQMODE = JBIT (IQMODE(KQT+JQDIVR), 1)
@@ -1252,43 +1082,10 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZSAVE
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
-     +,              LTEMP,LCORD,LFROM
-      EQUIVALENCE (LQRS,LQSYSS(7))
-      COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
-     +,              IZRECL,IMODEC,IMODEH
-      PARAMETER (KUP=5,KPW1=7,KNCH=9,KDATEC=10,KDATEM=11,KQUOTA=12,
-     +           KRUSED=13,KWUSED=14,KMEGA=15,KRZVER=16,KIRIN=17,
-     +           KIROUT=18,KRLOUT=19,KIP1=20,KNFREE=22,KNSD=23,KLD=24,
-     +           KLB=25,KLS=26,KLK=27,KLF=28,KLC=29,KLE=30,KNKEYS=31,
-     +           KNWKEY=32,KKDES=33,KNSIZE=253,KEX=6,KNMAX=100)
-      JBIT(IZW,IZP)     = IAND(ISHFT(IZW,-(IZP-1)),1)
+#include "zebra/rzcl.inc"
+#include "zebra/rzclun.inc"
+#include "zebra/rzk.inc"
+*#include "zebra/q_jbit.inc"
       IF(LQRS.EQ.0)GO TO 99
       IF(LTOP.EQ.0)GO TO 99
       IF(JBIT(IQ(KQSP+LTOP),2).NE.0)THEN
@@ -1380,9 +1177,8 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE FZICV (MS,IRMT)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /MZIOC/ NWFOAV,NWFOTT,NWFODN,NWFORE,IFOCON(3)
-     +,              MFOSAV(2),  JFOEND,JFOREP,JFOCUR,MFO(200)
+#include "zebra/quest.inc"
+#include "zebra/mzioc.inc"
       DIMENSION    MS(99), IRMT(99)
       DOUBLE PRECISION   THDB
       DIMENSION    THIS(2)
@@ -1482,64 +1278,14 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE FZIREL
-      COMMON /ZBCD/  IQNUM2(11),IQLETT(26),IQNUM(10),   IQPLUS,IQMINS
-     +,              IQSTAR,IQSLAS,IQOPEN,IQCLOS,IQDOLL,IQEQU, IQBLAN
-     +,              IQCOMA,IQDOT, IQNUMB,IQAPO, IQEXCL,IQCOLO,IQQUOT
-     +,              IQUNDE,IQCLSQ,IQAND, IQAT,  IQQUES,IQOPSQ,IQGREA
-     +,              IQLESS,IQREVE,IQCIRC,IQSEMI,IQPERC,  IQLOWL(26)
-     +,              IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV,  IQILEG
-     +,              NQHOL0,NQHOLL(95)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-                   EQUIVALENCE (LQFS,LQSYSS(4)), (LQFF,LQSYSR(4))
-     +,                        (LQFI,LQSYSR(5)), (LQFX,LQSYSR(6))
-      COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      COMMON /MZCT/  MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +,              MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +,              IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +,              LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +,                         LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +,              LQMTC1,LQMTC2, NQFRTC,NQLIVE
-      COMMON /FZCI/  LUNI,LUNNI,IXDIVI,LTEMPI,IEVFLI
-     +,              MSTATI,MEDIUI,IFIFOI,IDAFOI,IACMOI,IUPAKI
-     +,              IADOPI,IACTVI,INCBPI,LOGLVI,MAXREI,  ISTENI
-     +,              LBPARI, L4STOI,L4STAI,L4CURI,L4ENDI
-     +,              IFLAGI,NFASTI,N4SKII,N4RESI,N4DONI,N4ENDI
-     +,              IOPTIE,IOPTIR,IOPTIS,IOPTIA,IOPTIT,IOPTID
-     +,                     IOPTIF,IOPTIG,IOPTIH,IOPTI2(4)
-     +,              IDI(2),IPILI(4),NWTXI,NWSEGI,NWTABI,NWBKI,LENTRI
-     +,              NWUHCI,IOCHI(16),NWUMXI,NWUHI,NWIOI
-     +,              NWRDAI,NRECAI,LUHEAI,JRETCD,JERROR,NWERR
-      PARAMETER      (JAUIOC=50, JAUSEG=68, JAUEAR=130)
+#include "zebra/zbcd.inc"
+#include "zebra/zmach.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/eqlqf.inc"
+#include "zebra/mzcn.inc"
+#include "zebra/mzct.inc"
+#include "zebra/fzci.inc"
       DIMENSION    LADESV(6)
       DIMENSION    NAMESR(2)
       DATA  NAMESR / 4HFZIR, 4HEL   /
@@ -1590,6 +1336,10 @@ c Nobu
       CALL MZRELB
       IF (IQFLIO.LT.0)             GO TO 734
       LADESV(2) = LOCF(LENTRI) - LQSTOR
+*      IF (LADESV(2).LT.0) THEN
+*         LADESV(2) = LADESV(2) + 2**30
+*      ENDIF
+*      write(*,*) 'FZIREL- LADESV(2)', LADESV(2)
       LADESV(3) = LADESV(2) + 1
       LADESV(5) = IQLETT(9)
       LADESV(6) = IQLETT(15)
@@ -1627,39 +1377,9 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE FZILIN
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      COMMON /MZCT/  MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +,              MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +,              IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +,              LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +,                         LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +,              LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/mqsys.inc"
+#include "zebra/mzcn.inc"
+#include "zebra/mzct.inc"
       IQFOUL = 0
       LENTRI = 0
       K   = 0
@@ -1692,58 +1412,51 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZCHLS (IXST,LP)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+#include "zebra/zmach.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzcn.inc"
       DIMENSION    IXST(9), LP(9)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
       IXSTOR = IXST(1)
       IQLS   = LP(1)
       IF (IXSTOR.EQ.-7)                 GO TO 21
+*#include "zebra/qstore.inc"
       IF (JBYT(IXSTOR,27,6).NE.JQSTOR)  CALL MZSDIV (IXSTOR,-7)
-   21 IF (IQLS.LT.LQSTA(KQT+1))       GO TO 98
+ 21   continue
+*      write(*,*) 'mzchls IQLS, LQSTA(KQT+1)', IQLS, LQSTA(KQT+1)
+*      write(*,*) 'mzchls LQSTA(KQT+21)', LQSTA(KQT+21)
+      IF (IQLS.LT.LQSTA(KQT+1))       GO TO 98
       IF (IQLS.GE.LQSTA(KQT+21))      GO TO 98
       IQNIO = JBYT (IQ(KQS+IQLS),19,4)
       IQID  = IQ(KQS+IQLS-4)
       IQNL  = IQ(KQS+IQLS-3)
       IQNS  = IQ(KQS+IQLS-2)
       IQND  = IQ(KQS+IQLS-1)
+*      write(*,*) 'mzchls IQNIO:', IQNIO
+*      write(*,*) 'mzchls IQID:', IQID
+*      write(*,*) 'mzchls IQNL:', IQNL
+*      write(*,*) 'mzchls IQNS:', IQNS
+*      write(*,*) 'mzchls IQND:', IQND
+*      write(*,*) 'mzchls JBYT(IQNL,IQBITW-3,4):', JBYT(IQNL,IQBITW-3,4)
+*      write(*,*) 'mzchls JBYT(IQNS,IQBITW-3,4):', JBYT(IQNS,IQBITW-3,4)
+*      write(*,*) 'mzchls JBYT(IQND,IQBITW-3,4):', JBYT(IQND,IQBITW-3,4)
+      
       IF (  JBYT(IQNL,IQBITW-3,4)
      +    + JBYT(IQNS,IQBITW-3,4)
      +    + JBYT(IQND,IQBITW-3,4) .NE.0)    GO TO 91
       IQNX  = IQLS + IQND + 9
+*      write(*,*) 'mzchls IQNX:', IQNX
       IF (IQNX.GT.LQSTA(KQT+21))      GO TO 91
       IQLN  = IQLS - IQNL - IQNIO - 1
+*      write(*,*) 'mzchls IQLN:', IQLN
       IF (IQLN.LT.LQSTA(KQT+1))       GO TO 91
       NST = JBYT (LQ(KQS+IQLN),1,16) - 12
+*      write(*,*) 'mzchls KQS:', KQS
+*      write(*,*) 'mzchls LQ(KQS+IQLN):', LQ(KQS+IQLN)
+*      write(*,*) 'mzchls KQS+IQLN:', KQS+IQLN
+*      write(*,*) 'mzchls NST:', NST
       IF (NST.NE.IQNIO+IQNL)       GO TO 91
+*      write(*,*) 'mzchls IQNS,IQNL:',  IQNS,IQNL
       IF (IQNS.GT.IQNL)            GO TO 91
       IQFOUL = 0
       RETURN
@@ -1755,46 +1468,14 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZBOOK (IXP,LP,LSUPP,JBP, CHIDH,NL,NS,ND,NIOP,NZP)
-      COMMON /ZBCD/  IQNUM2(11),IQLETT(26),IQNUM(10),   IQPLUS,IQMINS
-     +,              IQSTAR,IQSLAS,IQOPEN,IQCLOS,IQDOLL,IQEQU, IQBLAN
-     +,              IQCOMA,IQDOT, IQNUMB,IQAPO, IQEXCL,IQCOLO,IQQUOT
-     +,              IQUNDE,IQCLSQ,IQAND, IQAT,  IQQUES,IQOPSQ,IQGREA
-     +,              IQLESS,IQREVE,IQCIRC,IQSEMI,IQPERC,  IQLOWL(26)
-     +,              IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV,  IQILEG
-     +,              NQHOL0,NQHOLL(95)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCL/  NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
-     +,              LQSUP,NQBIA, NQIOSV(3)
+#include "zebra/zbcd.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzcl.inc"
       DIMENSION    IXP(9),LP(9),LSUPP(9),JBP(9),NIOP(9),NZP(9)
       CHARACTER    CHIDH*(*)
       DIMENSION    NAMESR(2)
       DATA  NAMESR / 4HMZBO, 4HOK   /
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
@@ -1813,71 +1494,62 @@ c Nobu
           CALL UCOPYI (NIOP,NQIOCH,NIO+1)
           NQIOSV(1) = 0
         ENDIF
+*        write(*,*) 'MZBOOK 1 LOCF(LSUPP(1))', LOCF(LSUPP(1))
+*        write(*,*) 'MZBOOK 1 LSUPP, KQT', LSUPP, KQT
+*        write(*,*) 'MZBOOK 1 IXP', IXP
+*        write(*,*) 'MZBOOK LQSTA(KQT+1),JDV', LQSTA(KQT+1),JDV
+*        write(*,*) 'MZBOOK 1 NQOFFT(1+1)', NQOFFT(1+1)
+*        write(*,*) 'MZBOOK 1 LQSTA(NQOFFT(1+1)+1)'
+*        write(*,*) LQSTA(NQOFFT(1+1)+1)
+*        write(*,*) 'MZBOOK 1 LQSTA(NQOFFT(1+1)+21)'
+*        write(*,*) LQSTA(NQOFFT(1+1)+21)
+        
         CALL MZLIFT (IXP,LP,LSUPP,63, NQID, NZP)
+*        write(*,*) 'MZBOOK 2 LOCF(LSUPP(1))', LOCF(LSUPP(1))
+*        write(*,*) 'MZBOOK 2 LSUPP, KQT', LSUPP, KQT
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZLIFT (IXDIV,LP,LSUPP,JBIAS,NAME,NZERO)
-      PARAMETER      (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +,              NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      DIMENSION    LQMST(9)
-      EQUIVALENCE (LQMST(1),LQSYSS(2))
-      EQUIVALENCE (LQFORM,LQSYSS(5))
-      COMMON /MZCL/  NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
-     +,              LQSUP,NQBIA, NQIOSV(3)
-      COMMON /MZCN/  IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      COMMON /MZCT/  MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +,              MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +,              IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +,              LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +,                         LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +,              LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zmach.inc"
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/zvfaut.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/eqlqmst.inc"
+#include "zebra/eqlqform.inc"
+#include "zebra/mzcl.inc"
+#include "zebra/mzcn.inc"
+#include "zebra/mzct.inc"
       DIMENSION    IXDIV(9), LP(9), LSUPP(9), NAME(9)
       DIMENSION    NAMESR(2)
       DATA  NAMESR / 4HMZLI, 4HFT   /
-      JBIT(IZW,IZP)     = IAND(ISHFT(IZW,-(IZP-1)),1)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
-      MSBYT (MZ,IZW,IZP,NZB) = IOR (
-     +       IAND (IZW, NOT(ISHFT (ISHFT(NOT(0),-(32-NZB)),IZP-1)))
-     +      ,ISHFT (ISHFT(MZ,32-NZB), -(33-IZP-NZB)) )
+*#include "zebra/q_jbit.inc"
+*#include "zebra/q_jbyt.inc"
+*#include "zebra/q_sbyt.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
 ******IF (IQVSTA.NE.0)       CALL ZVAUTX
+      
+*      write(*,*) '#################### mzlift #####################'
+*      write(*,*) 'mzlift LOCF(LQSYSS(5))', LOCF(LQSYSS(5))
+*      write(*,*) 'mzlift LOCF(LQSUPP(1))', LOCF(LSUPP(1))
+*      write(*,*) 'mzlift 0 KQT', KQT
+*      write(*,*) 'mzlift 0 KQS', KQS
+*      write(*,*) 'mzlift 0 LQ(KQS+9865)', LQ(KQS+9865)
+*      write(*,*) 'mzlift 0 NTOT, LQSTA(KQT+21)', NTOT, LQSTA(KQT+21)
+*      write(*,*) 'mzlift 0 LQSTA(KQT+1)', LQSTA(KQT+1)
+*      write(*,*) 'mzlift 0 NQOFFT(1+1)', NQOFFT(1+1)
+*      write(*,*) 'mzlift 0 LQSTA(NQOFFT(1+1)+1)'
+*      write(*,*) LQSTA(NQOFFT(1+1)+1)
+*      write(*,*) 'mzlift 0 LQSTA(NQOFFT(1+1)+21)'
+*      write(*,*) LQSTA(NQOFFT(1+1)+21)
       IF (JBIAS.NE.63)  THEN
           NQBIA = JBIAS
           NIO   = JBYT (NAME(5),12,4)
@@ -1885,39 +1557,73 @@ c Nobu
           IF (NIO.NE.0)  NQIOSV(1)=0
         ENDIF
       JDV   = IXDIV(1)
+*      write(*,*) 'mzlift IXDIV(1), JDV', IXDIV(1), JDV
       LQSUP = LSUPP(1)
+*      write(*,*) 'mzlift LQSUP', LQSUP
+*      write(*,*) 'mzlift NAME(1)', NAME(1)
+*      write(*,*) 'mzlift NQBIA', NQBIA
       IF (NQBIA.GE.2)  LQSUP = 0
       ICHORG = NQIOCH(1)
       NTOT   = NQNL + NQND + 10
+*      write(*,*) 'mzlift JDV, JQSTOR', JDV, JQSTOR
       IF (JDV.EQ.-7)                 GO TO 24
       IF (JBYT(JDV,27,6).NE.JQSTOR)  GO TO 22
       JQDIVI = JBYT (JDV,1,26)
       IF (JQDIVI.LT.21)              GO TO 23
-   22 CALL MZSDIV (JDV,0)
+ 22   CONTINUE
+*      write(*,*) 'mzlift 6 KQT', KQT
+*      write(*,*) 'mzlift NTOT, LQSTA(KQT+21)', NTOT, LQSTA(KQT+21)
+*      write(*,*) 'mzlift LQSTA(KQT+1),JDV', LQSTA(KQT+1),JDV
+*      write(*,*) 'mzlift 6 NQOFFT(1+1)', NQOFFT(1+1)
+*      write(*,*) 'mzlift 6 LQSTA(NQOFFT(1+1)+1)'
+*      write(*,*) LQSTA(NQOFFT(1+1)+1)
+*      write(*,*) 'mzlift 6 LQSTA(NQOFFT(1+1)+21)'
+*      write(*,*) LQSTA(NQOFFT(1+1)+21)
+      CALL MZSDIV (JDV,0)
+*      write(*,*) 'mzlift 7 KQT', KQT
+*      write(*,*) 'mzlift NTOT, LQSTA(KQT+21)', NTOT, LQSTA(KQT+21)
+*      write(*,*) 'mzlift LQSTA(KQT+1),JDV', LQSTA(KQT+1), JDV
    23 CALL MZCHNB (LP)
    24 CONTINUE
+*      write(*,*) 'mzlift NQID, IQBITW', NQID, IQBITW
       J = JBYT (NQID,IQBITW-7,8)
       IF (J.EQ.0)                  GO TO 91
+*      write(*,*) 'mzlift if 1'
       IF (J.EQ.255)                GO TO 91
+*      write(*,*) 'mzlift if 2'
+*      write(*,*) 'mzlift NTOT, LQSTA(KQT+21)', NTOT, LQSTA(KQT+21)
+*      write(*,*) 'mzlift LQSTA(KQT+1)', LQSTA(KQT+1)
+c     Nobu c/o 20210905
       IF (NTOT.GE.LQSTA(KQT+21))      GO TO 91
       IF (NQNS.GT.NQNL)            GO TO 91
       IF (NQNS.LT.0)               GO TO 91
       IF (NQNL.GT.64000)           GO TO 91
       IF (NQND.LT.0)               GO TO 91
       IF (NQBIA.GE.3)              GO TO 91
+*      write(*,*) 'mzlift if 8 LQSUP', LQSUP
       IF (LQSUP.EQ.0)              GO TO 25
+*      write(*,*) 'mzlift if 9'
+*      write(*,*) 'mzlift if IQFOUL',  IQFOUL
       CALL MZCHLS (-7,LQSUP)
+*      write(*,*) 'mzlift if 10'
+*      write(*,*) 'mzlift if IQFOUL',  IQFOUL
       IF (IQFOUL.NE.0)             GO TO 92
+*      write(*,*) 'mzlift if 11'
       IF (NQBIA.EQ.1)              GO TO 26
+*      write(*,*) 'mzlift if 12'
       IF (JBIT(IQ(KQS+LQSUP),IQDROP).NE.0)  GO TO 92
+*      write(*,*) 'mzlift if 13'
       IF (IQNS+NQBIA.LT.0)         GO TO 93
       GO TO 26
    25 IF (NQBIA.LE.0)              GO TO 92
+*      write(*,*) 'mzlift if 13'
    26 CONTINUE
+*      write(*,*) 'mzlift 2 LQSUP, LSUPP(1)', LQSUP, LSUPP(1)
       IDN   = 1
       LS    = LQSUP
       LSAME = LQSUP
       LNEXT = LQSUP
+*      write(*,*) 'mzlift NQBIA', NQBIA
       IF (NQBIA.GT.0)              GO TO 38
       LNEXT = LQ(KQS+LNEXT+NQBIA)
       IF (LNEXT.EQ.0)              GO TO 36
@@ -1933,7 +1639,10 @@ c Nobu
       GO TO 39
    37 IDN = IQ(KQS+LSAME-5) + 1
       GO TO 39
-   38 IF (LNEXT.NE.0)  IDN=IQ(KQS+LNEXT-5)+1
+ 38   CONTINUE
+*      write(*,*) 'mzlift KQS, LNEXT', KQS, LNEXT
+*      write(*,*) 'mzlift ICHORG', ICHORG
+      IF (LNEXT.NE.0)  IDN=IQ(KQS+LNEXT-5)+1
    39 CONTINUE
       IF (ICHORG.LT.0)             GO TO 47
       IF (ICHORG.LT.8)  THEN
@@ -1973,15 +1682,19 @@ c Nobu
    47 J     = JBYT (ICHORG,1,6)
       NQNIO = JBYT (ICHORG,7,5) - 1
       IOTH  = JBYT (ICHORG,12,5)
+*      write(*,*) 'mzlift 1 J, NQNIO, IOTH',  J, NQNIO, IOTH
       IF (J.EQ.1)  THEN
-          IF (NQNIO.NE.IOTH)       GO TO 96
-          GO TO 49
-        ENDIF
+         IF (NQNIO.NE.IOTH)       GO TO 96
+         GO TO 49
+      ENDIF
       IF (J.NE.2)                  GO TO 96
       IF (IOTH.NE.0)               GO TO 96
       IXIO = JBYT (ICHORG,17,16)
+*      write(*,*) 'mzlift 2 IXIO',  IXIO
       IF (IXIO.EQ.0)               GO TO 96
       LIOD = LQ(KQSP+LQFORM-2)
+*      write(*,*) 'mzlift 2 IQ(KQSP+LIOD+1)', IQ(KQSP+LIOD+1)
+*      write(*,*) 'mzlift 2 NQIOSV(1)', NQIOSV(1)
       IF (IXIO.GE.IQ(KQSP+LIOD+1))    GO TO 96
    48 IF (IXIO.EQ.NQIOSV(1))  THEN
           NQIOCH(1) = NQIOSV(2)
@@ -2014,7 +1727,10 @@ c Nobu
       IF (LSAME.LT.LQSTA(KQT+JQDIVI))  GO TO 97
       IF (LSAME.GE.LQEND(KQT+JQDIVI))  GO TO 97
    61 CALL MZRESV
+*      write(*,*) 'mzlift NQRESV,NTOT', NQRESV,NTOT
       NQRESV = NQRESV - NTOT
+*      write(*,*) 'mzlift NQRESV,NTOT', NQRESV,NTOT
+c Nobu c/o 20210905
       IF (NQRESV.LT.0)             GO TO 81
       IF (JQMODE.NE.0)             GO TO 63
       NQLN  = LQEND(KQT+JQDIVI)
@@ -2023,12 +1739,18 @@ c Nobu
       GO TO 65
    63 LE    = LQSTA(KQT+JQDIVI)
       NQLN  = LE - NTOT
+*      write(*,*) 'mzlift 1 KQT, JQDIVI', KQT, JQDIVI
+*      write(*,*) 'mzlift 1 LE, NTOT', LE, NTOT
       LQSTA(KQT+JQDIVI) = NQLN
    65 NZ = MIN (NZERO,NQND)
       IF (NZ.EQ.0)  NZ=NQND
       IF (NZ.LT.0)  NZ=0
       NST  = NQNIO + NQNL
+*      write(*,*) 'mzlift 1 NQNIO, NQNL', NQNIO, NQNL
+*      write(*,*) 'mzlift 1 NQLN, NST', NQLN, NST
+*      write(*,*) 'mzlift 1 NQLS', NQLS
       NQLS = NQLN + NST + 1
+*      write(*,*) 'mzlift 2 NQLS', NQLS
       CALL VZEROI (LQ(KQS+NQLN+NQNIO+1),NQNL+NZ+9)
       NQIOCH(1) = MSBYT (NST+12,NQIOCH(1),1,16)
       DO 67  J=0,NQNIO
@@ -2050,6 +1772,14 @@ c Nobu
       IF (LNEXT.NE.0)              GO TO 74
       LUP  = 0
       KADR = LOCF (LSUPP(1)) - LQSTOR
+*      write(*,*) 'mzlift KADR', KADR
+*     IF (KADR.LT.-2**29) THEN
+*         KADR = KADR + 2**30
+*      ENDIF
+*      write(*,*) 'LOCF (LSUPP(1)) - LQSTOR', LOCF (LSUPP(1)) - LQSTOR
+*      write(*,*) 'LOCF (LSUPP(1)), LQSTOR', LOCF (LSUPP(1)), LQSTOR
+*      write(*,*) 'mzlift KADR, LSUPP(1)', KADR, LSUPP(1)
+*      write(*,*) 'mzlift , NQLS', NQLS
       IF (KADR.LT.LQSTA(KQT+1))       GO TO 78
       IF (KADR.LT.LQSTA(KQT+21))      GO TO 98
       GO TO 78
@@ -2058,18 +1788,27 @@ c Nobu
    77 IF (LNEXT.EQ.0)              GO TO 78
       LQ(KQS+NQLS)    = LNEXT
       LQ(KQS+LNEXT+2) = NQLS
-   78 LQ(KQS+NQLS+1) = LUP
+ 78   CONTINUE
+*      write(*,*) 'mzlift 3 LSUPP(1), NQLS', LSUPP(1), NQLS
+      LQ(KQS+NQLS+1) = LUP
       LQ(KQS+NQLS+2) = KADR
+*      write(*,*) 'KQS, KADR ', KQS, KADR 
+*      write(*,*) 'KQS+KADR ', KQS+KADR 
+*      write(*,*) 'mzlift 4 LSUPP(1), NQLS', LSUPP(1), NQLS
       LQ(KQS+KADR)   = NQLS
+*      write(*,*) 'mzlift 5 LSUPP(1), NQLS', LSUPP(1), NQLS
    79 LP(1) = NQLS
+*      write(*,*) 'mzlift 6 LSUPP(1), NQLS', LSUPP(1), NQLS
       IF (NQLOGL.GE.2)
      + WRITE (IQLOG,9079) JQSTOR,JQDIVI,NQLS,LQSUP,NQBIA,
      +                                  NQID,NQNL,NQNS,NQND
  9079 FORMAT (' MZLIFT-  Store/Div',2I3,' L/LSUP/JBIAS=',2I9,I6,
      F' ID,NL,NS,ND= ',A4,2I6,I9)
-  999 NQTRAC = NQTRAC - 2
+ 999  NQTRAC = NQTRAC - 2
+*      write(*,*) 'mzlift 7 LQSUP', LQSUP
+*      write(*,*) 'mzlift 7 LSUPP(1)', LSUPP(1)
       RETURN
-   81 LQMST(KQT+1) = LQSUP
+ 81   LQMST(KQT+1) = LQSUP
       CALL MZGAR1
       LQSUP = LQMST(KQT+1)
       IF (NQBIA.GE.1)              GO TO 61
@@ -2096,6 +1835,7 @@ c Nobu
    92 NQCASE = NQCASE + 1
    91 NQCASE = NQCASE + 1
    90 NQFATA = NQFATA + 7
+*      write(*,*) 'mzlift 5 LQSUP', LQSUP
       IQUEST(11) = LQSUP
       IQUEST(12) = NQBIA
       IQUEST(13) = NQID
@@ -2103,59 +1843,34 @@ c Nobu
       IQUEST(15) = NQNS
       IQUEST(16) = NQND
       IQUEST(17) = ICHORG
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZLINK (IXSTOR,CHNAME,LAREA,LREF,LREFL)
-      COMMON /ZBCD/  IQNUM2(11),IQLETT(26),IQNUM(10),   IQPLUS,IQMINS
-     +,              IQSTAR,IQSLAS,IQOPEN,IQCLOS,IQDOLL,IQEQU, IQBLAN
-     +,              IQCOMA,IQDOT, IQNUMB,IQAPO, IQEXCL,IQCOLO,IQQUOT
-     +,              IQUNDE,IQCLSQ,IQAND, IQAT,  IQQUES,IQOPSQ,IQGREA
-     +,              IQLESS,IQREVE,IQCIRC,IQSEMI,IQPERC,  IQLOWL(26)
-     +,              IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV,  IQILEG
-     +,              NQHOL0,NQHOLL(95)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+#include "zebra/zbcd.inc"
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/zvfaut.inc"
+#include "zebra/mqsys.inc"
       DIMENSION    LAREA(9),LREF(9),LREFL(9),NAME(2)
       CHARACTER    *(*) CHNAME
       DIMENSION    NAMESR(2)
       DATA  NAMESR / 4HMZLI, 4HNK   /
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
+*#include "zebra/q_locf.inc"
+* Nobu 2021.09.05
+      NQTRAC = 0
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
+*#include "zebra/qstore.inc"
       IF (JBYT(IXSTOR,27,6).NE.JQSTOR)  CALL MZSDIV (IXSTOR,-7)
 ******IF (IQVSTA.NE.0)       CALL ZVAUTX
       LSYS  = LQSYSS(KQT+1)
@@ -2169,6 +1884,17 @@ c Nobu
       LOCAR = LOCF (LAREA(1)) - LQSTOR
       LOCR  = LOCF (LREF(1))  - LQSTOR
       LOCRL = LOCF (LREFL(1)) - LQSTOR
+*      IF (LOCAR.LT.0) THEN
+*         LOCAR = LOCAR + 2**30
+*      ENDIF
+*      IF (LOCR.LT.0) THEN
+*         LOCR = LOCR + 2**30
+*      ENDIF
+*      IF (LOCRL.LT.0) THEN
+*         LOCRL = LOCRL + 2**30
+*      ENDIF
+*      write(*,*) 'LOCAR, LOCR, LOCRL'
+*      write(*,*) LOCAR, LOCR, LOCRL
       NS = LOCR    - LOCAR
       NL = LOCRL+1 - LOCAR
       IF (NL.EQ.1)  THEN
@@ -2240,72 +1966,36 @@ c Nobu
       IQUEST(15) = LOCRL + LQSTOR
       IQUEST(16) = NS
       IQUEST(17) = NL
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZPUSH (IXDIV,LORGP,INCNLP,INCNDP,CHOPT)
-      COMMON /ZBCD/ IQNUM2(11),IQLETT(26),IQNUM(10), IQPLUS,IQMINS
-     +, IQSTAR,IQSLAS,IQOPEN,IQCLOS,IQDOLL,IQEQU, IQBLAN
-     +, IQCOMA,IQDOT, IQNUMB,IQAPO, IQEXCL,IQCOLO,IQQUOT
-     +, IQUNDE,IQCLSQ,IQAND, IQAT, IQQUES,IQOPSQ,IQGREA
-     +, IQLESS,IQREVE,IQCIRC,IQSEMI,IQPERC, IQLOWL(26)
-     +, IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV, IQILEG
-     +, NQHOL0,NQHOLL(95)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCL/ NQLN,NQLS,NQNIO,NQID,NQNL,NQNS,NQND,NQIOCH(16)
-     +, LQSUP,NQBIA, NQIOSV(3)
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zbcd.inc"
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/zvfaut.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzcl.inc"
+#include "zebra/mzcn.inc"
+#include "zebra/mzct.inc"
       DIMENSION IXDIV(9),LORGP(9),INCNLP(9),INCNDP(9)
       CHARACTER *(*) CHOPT
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZPU, 4HSH  /
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
-      MSBIT1 (IZW,IZP) = IOR (IZW, ISHFT(1,IZP-1))
-      MSBYT (MZ,IZW,IZP,NZB) = IOR (
-     + IAND (IZW, NOT(ISHFT (ISHFT(NOT(0),-(32-NZB)),IZP-1)))
-     + ,ISHFT (ISHFT(MZ,32-NZB), -(33-IZP-NZB)) )
+*#include "zebra/q_jbit.inc"
+*#include "zebra/q_jbyt.inc"
+*#include "zebra/q_sbit1.inc"
+*#include "zebra/q_sbyt.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       IF (IXDIV(1).EQ.-7) GO TO 12
       CALL MZSDIV (IXDIV,0)
    12 CALL MZCHNB (LORGP)
@@ -2528,56 +2218,29 @@ c Nobu
    91 NQCASE = NQCASE + 1
       NQFATA = NQFATA + 1
       IQUEST(11) = LORG
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZNEED (IXDIV,NEEDP,CHOPT)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zunit.inc"
+#include "zebra/zvfaut.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
       DIMENSION IXDIV(9),NEEDP(9)
       CHARACTER *(*) CHOPT
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZNE, 4HED  /
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       JDV = IXDIV(1)
       NEED = NEEDP(1)
       IF (JBYT(JDV,27,6).NE.JQSTOR) GO TO 22
@@ -2596,6 +2259,7 @@ c Nobu
      + WRITE (IQLOG,9029) JQSTOR,JQDIVI,NEED,NQRESV,CHOPT
  9029 FORMAT (' MZNEED-  Store/Div',2I3,' NEED/Excess=',2I8
      F,' Opt=',A)
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       RETURN
    41 CALL UOPTC (CHOPT,'G',IQUEST)
@@ -2609,7 +2273,7 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZDATE(IWORD,IDATE,ITIME,ICASE)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
       IF(ICASE.EQ.1)THEN
          ICONT = JBYT(IWORD,9,24)
          IMINUT= MOD(ICONT,60)
@@ -2649,57 +2313,19 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZCDIR(CHPATH,CHOPT)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
-     +, LTEMP,LCORD,LFROM
-      EQUIVALENCE (LQRS,LQSYSS(7))
-      PARAMETER (NLPATM=100)
-      COMMON /RZDIRN/NLCDIR,NLNDIR,NLPAT
-      COMMON /RZDIRC/CHCDIR(NLPATM),CHNDIR(NLPATM),CHPAT(NLPATM)
-      CHARACTER*16 CHNDIR, CHCDIR, CHPAT
-      COMMON /RZCH/ CHWOLD,CHL
-      CHARACTER*255 CHWOLD,CHL
-      COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
-     +, IZRECL,IMODEC,IMODEH
-      PARAMETER (KUP=5,KPW1=7,KNCH=9,KDATEC=10,KDATEM=11,KQUOTA=12,
-     + KRUSED=13,KWUSED=14,KMEGA=15,KRZVER=16,KIRIN=17,
-     + KIROUT=18,KRLOUT=19,KIP1=20,KNFREE=22,KNSD=23,KLD=24,
-     + KLB=25,KLS=26,KLK=27,KLF=28,KLC=29,KLE=30,KNKEYS=31,
-     + KNWKEY=32,KKDES=33,KNSIZE=253,KEX=6,KNMAX=100)
+#include "zebra/zunit.inc"
+#include "zebra/rzcl.inc"
+#include "zebra/rzdir.inc"
+#include "zebra/rzch.inc"
+#include "zebra/rzclun.inc"
+#include "zebra/rzk.inc"
       DIMENSION IOPTV(5)
       EQUIVALENCE (IOPTR,IOPTV(1)), (IOPTP,IOPTV(2)), (IOPTU,IOPTV(3))
       EQUIVALENCE (IOPTK,IOPTV(4)), (IOPTQ,IOPTV(5))
       CHARACTER*(*) CHPATH,CHOPT
       CHARACTER*1 COPTQ
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbit.inc"
+*#include "zebra/q_jbyt.inc"
       IQUEST(1)=0
       CALL UOPTC (CHOPT,'RPUKQ',IOPTV)
       IF(IOPTK.NE.0) IOPTU=0
@@ -2806,56 +2432,15 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZFILE(LUNIN,CHDIR,CHOPT)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
-     +, LTEMP,LCORD,LFROM
-      EQUIVALENCE (LQRS,LQSYSS(7))
-      PARAMETER (NLPATM=100)
-      COMMON /RZDIRN/NLCDIR,NLNDIR,NLPAT
-      COMMON /RZDIRC/CHCDIR(NLPATM),CHNDIR(NLPATM),CHPAT(NLPATM)
-      CHARACTER*16 CHNDIR, CHCDIR, CHPAT
-      COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
-     +, IZRECL,IMODEC,IMODEH
-      PARAMETER (KUP=5,KPW1=7,KNCH=9,KDATEC=10,KDATEM=11,KQUOTA=12,
-     + KRUSED=13,KWUSED=14,KMEGA=15,KRZVER=16,KIRIN=17,
-     + KIROUT=18,KRLOUT=19,KIP1=20,KNFREE=22,KNSD=23,KLD=24,
-     + KLB=25,KLS=26,KLK=27,KLF=28,KLC=29,KLE=30,KNKEYS=31,
-     + KNWKEY=32,KKDES=33,KNSIZE=253,KEX=6,KNMAX=100)
-      COMMON/RZCKEY/IHEAD(3),KEY(100),KEY2(100),KEYDUM(50)
-      INTEGER KLCYCL, KPPCYC, KFRCYC, KSRCYC, KFLCYC, KORCYC,
-     + KCNCYC, KNWCYC, KKYCYC, KVSCYC
-      COMMON/RZCYCLE/KLCYCL, KPPCYC, KFRCYC, KSRCYC, KFLCYC, KORCYC,
-     + KCNCYC, KNWCYC, KKYCYC, KVSCYC
-      COMMON /RZBUFF/ ITEST(8704)
+#include "zebra/zunit.inc"
+#include "zebra/zstate.inc"
+#include "zebra/rzcl.inc"
+#include "zebra/rzdir.inc"
+#include "zebra/rzclun.inc"
+#include "zebra/rzk.inc"
+#include "zebra/rzckey.inc"
+#include "zebra/rzcycle.inc"
+#include "zebra/rzbuff.inc"
       CHARACTER CHOPT*(*),CHDIR*(*)
       CHARACTER*16 CHTOP
       DIMENSION IOPTV(10)
@@ -2864,8 +2449,8 @@ c Nobu
       EQUIVALENCE (IOPT1,IOPTV(5)), (IOPTD,IOPTV(6))
       EQUIVALENCE (IOPTC,IOPTV(7)), (IOPTX,IOPTV(8))
       EQUIVALENCE (IOPTB,IOPTV(9)), (IOPTH,IOPTV(10))
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbit.inc"
+*#include "zebra/q_jbyt.inc"
       IQUEST(1)=0
       LOGLV = MIN(NQLOGD,4)
       LOGLV = MAX(LOGLV,-3)
@@ -3038,61 +2623,20 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZFDIR(CHROUT,LT,LDIR,CHOPT)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
-     +, LTEMP,LCORD,LFROM
-      EQUIVALENCE (LQRS,LQSYSS(7))
-      PARAMETER (NLPATM=100)
-      COMMON /RZDIRN/NLCDIR,NLNDIR,NLPAT
-      COMMON /RZDIRC/CHCDIR(NLPATM),CHNDIR(NLPATM),CHPAT(NLPATM)
-      CHARACTER*16 CHNDIR, CHCDIR, CHPAT
-      COMMON /RZCH/ CHWOLD,CHL
-      CHARACTER*255 CHWOLD,CHL
-      PARAMETER (KUP=5,KPW1=7,KNCH=9,KDATEC=10,KDATEM=11,KQUOTA=12,
-     + KRUSED=13,KWUSED=14,KMEGA=15,KRZVER=16,KIRIN=17,
-     + KIROUT=18,KRLOUT=19,KIP1=20,KNFREE=22,KNSD=23,KLD=24,
-     + KLB=25,KLS=26,KLK=27,KLF=28,KLC=29,KLE=30,KNKEYS=31,
-     + KNWKEY=32,KKDES=33,KNSIZE=253,KEX=6,KNMAX=100)
-      INTEGER KLCYCL, KPPCYC, KFRCYC, KSRCYC, KFLCYC, KORCYC,
-     + KCNCYC, KNWCYC, KKYCYC, KVSCYC
-      COMMON/RZCYCLE/KLCYCL, KPPCYC, KFRCYC, KSRCYC, KFLCYC, KORCYC,
-     + KCNCYC, KNWCYC, KKYCYC, KVSCYC
-      COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
-     +, IZRECL,IMODEC,IMODEH
+#include "zebra/zunit.inc"
+#include "zebra/rzcl.inc"
+#include "zebra/rzdir.inc"
+#include "zebra/rzch.inc"
+#include "zebra/rzk.inc"
+#include "zebra/rzcycle.inc"
+#include "zebra/rzclun.inc"
       CHARACTER*(*) CHROUT
       CHARACTER*(*) CHOPT
       DIMENSION IHDIR(4)
       LOGICAL RZSAME
       INTEGER FQUOTA
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbit.inc"
+*#include "zebra/q_jbyt.inc"
       IOPTQ = INDEX(CHOPT,'Q')
       LT=0
       LDIR=0
@@ -3210,75 +2754,28 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE FZIMTB
-      COMMON /ZBCD/ IQNUM2(11),IQLETT(26),IQNUM(10), IQPLUS,IQMINS
-     +, IQSTAR,IQSLAS,IQOPEN,IQCLOS,IQDOLL,IQEQU, IQBLAN
-     +, IQCOMA,IQDOT, IQNUMB,IQAPO, IQEXCL,IQCOLO,IQQUOT
-     +, IQUNDE,IQCLSQ,IQAND, IQAT, IQQUES,IQOPSQ,IQGREA
-     +, IQLESS,IQREVE,IQCIRC,IQSEMI,IQPERC, IQLOWL(26)
-     +, IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV, IQILEG
-     +, NQHOL0,NQHOLL(95)
-      PARAMETER (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +, NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-                   EQUIVALENCE (LQFS,LQSYSS(4)), (LQFF,LQSYSR(4))
-     +, (LQFI,LQSYSR(5)), (LQFX,LQSYSR(6))
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
-      COMMON /FZCI/ LUNI,LUNNI,IXDIVI,LTEMPI,IEVFLI
-     +, MSTATI,MEDIUI,IFIFOI,IDAFOI,IACMOI,IUPAKI
-     +, IADOPI,IACTVI,INCBPI,LOGLVI,MAXREI, ISTENI
-     +, LBPARI, L4STOI,L4STAI,L4CURI,L4ENDI
-     +, IFLAGI,NFASTI,N4SKII,N4RESI,N4DONI,N4ENDI
-     +, IOPTIE,IOPTIR,IOPTIS,IOPTIA,IOPTIT,IOPTID
-     +, IOPTIF,IOPTIG,IOPTIH,IOPTI2(4)
-     +, IDI(2),IPILI(4),NWTXI,NWSEGI,NWTABI,NWBKI,LENTRI
-     +, NWUHCI,IOCHI(16),NWUMXI,NWUHI,NWIOI
-     +, NWRDAI,NRECAI,LUHEAI,JRETCD,JERROR,NWERR
-      PARAMETER (JAUIOC=50, JAUSEG=68, JAUEAR=130)
-      COMMON /FZCSEG/NQSEG,IQSEGH(2,20),IQSEGD(20),IQSGLU,IQSGWK
-      COMMON /FZCOCC/NQOCC,IQOCDV(20),IQOCSP(20)
+#include "zebra/zbcd.inc"
+#include "zebra/zmach.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/eqlqf.inc"
+#include "zebra/mzcn.inc"
+#include "zebra/mzct.inc"
+#include "zebra/fzci.inc"
+#include "zebra/fzcseg.inc"
+#include "zebra/fzcocc.inc"
       DIMENSION ITOSOR(20), ISORDV(20), ISORSP(20)
       DIMENSION LSTAV(20), LENDV(20)
       EQUIVALENCE (LSTAV(1),IQUEST(60)), (LENDV(1),IQUEST(80))
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HFZIM, 4HTB  /
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_shiftl.inc"
+*#include "zebra/q_jbyt.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       IFLGAR = 0
       IF (NQSEG.LE.0) THEN
           NQSEG = 1
@@ -3456,6 +2953,7 @@ c Nobu
  9058 FORMAT (' FZIMTB-  read segment',I3,' into division/from/to'
      F,I3,2I9)
    59 LMT = LMT + 8
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       RETURN
    61 IF (IFLGAR.GE.2) GO TO 721
@@ -3518,10 +3016,10 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE IZBCDT (NP,ITABT)
-      COMMON /QUEST/ IQUEST(100)
-      PARAMETER (NQTCET=256)
-      COMMON /ZCETA/ IQCETA(256),IQTCET(256)
-      COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
+#include "zebra/quest.inc"
+* No zebra/zbcd.inc? see packlib/zebra/qutil/izbcdt.F Nobu 2021.09.05
+#include "zebra/zceta.inc"
+#include "zebra/zkrakc.inc"
       DIMENSION NP(9), ITABT(99)
       N = NP(1)
       LIM = ITABT(1)
@@ -3559,54 +3057,18 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZINK(KEYU,ICYCLE,CHOPT)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
-     +, LTEMP,LCORD,LFROM
-      EQUIVALENCE (LQRS,LQSYSS(7))
-      COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
-     +, IZRECL,IMODEC,IMODEH
-      COMMON /RZCOUT/IP1,IR1,IR2,IROUT,IRLOUT,IOPTRR
-      PARAMETER (KUP=5,KPW1=7,KNCH=9,KDATEC=10,KDATEM=11,KQUOTA=12,
-     + KRUSED=13,KWUSED=14,KMEGA=15,KRZVER=16,KIRIN=17,
-     + KIROUT=18,KRLOUT=19,KIP1=20,KNFREE=22,KNSD=23,KLD=24,
-     + KLB=25,KLS=26,KLK=27,KLF=28,KLC=29,KLE=30,KNKEYS=31,
-     + KNWKEY=32,KKDES=33,KNSIZE=253,KEX=6,KNMAX=100)
-      COMMON/RZCKEY/IHEAD(3),KEY(100),KEY2(100),KEYDUM(50)
-      INTEGER KLCYCL, KPPCYC, KFRCYC, KSRCYC, KFLCYC, KORCYC,
-     + KCNCYC, KNWCYC, KKYCYC, KVSCYC
-      COMMON/RZCYCLE/KLCYCL, KPPCYC, KFRCYC, KSRCYC, KFLCYC, KORCYC,
-     + KCNCYC, KNWCYC, KKYCYC, KVSCYC
+#include "zebra/rzcl.inc"
+#include "zebra/rzclun.inc"
+#include "zebra/rzcout.inc"
+#include "zebra/rzk.inc"
+#include "zebra/rzckey.inc"
+#include "zebra/rzcycle.inc"
       CHARACTER*(*) CHOPT
       DIMENSION KEYU(*)
       EQUIVALENCE (IOPTA,IQUEST(91)), (IOPTC,IQUEST(92))
      +, (IOPTD,IQUEST(93)), (IOPTN,IQUEST(94)), (IOPTR,IQUEST(95))
      +, (IOPTS,IQUEST(96))
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
       IQUEST(1)=0
       CALL UOPTC(CHOPT,'ACDNRS',IQUEST(91))
       LK=IQ(KQSP+LCDIR+KLK)
@@ -3782,7 +3244,7 @@ c Nobu
       CHARACTER*(*) CHPATH,CH(*)
       CHARACTER*255 CHTEMP
       CHARACTER*16  CHL
-      COMMON /QUEST/ IQUEST(100)
+#include "zebra/quest.inc"
       MAXLEN=LEN(CHPATH)
       IF(MAXLEN.GT.255)MAXLEN=255
       IQUEST(1) = 0
@@ -3815,18 +3277,10 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZPATH(CHPATH)
-      CHARACTER  CQALLC*96
-      COMMON /ZBCDCH/ CQALLC
-                      CHARACTER*1  CQLETT(96), CQNUM(10)
-                      EQUIVALENCE (CQLETT(1),CQALLC(1:1))
-                      EQUIVALENCE (CQNUM(1), CQALLC(27:27))
+#include "zebra/zbcdch.inc"
       CHARACTER*1  BSLASH,KTILDE
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
-      PARAMETER (NLPATM=100)
-      COMMON /RZDIRN/NLCDIR,NLNDIR,NLPAT
-      COMMON /RZDIRC/CHCDIR(NLPATM),CHNDIR(NLPATM),CHPAT(NLPATM)
-      CHARACTER*16   CHNDIR,    CHCDIR,    CHPAT
+#include "zebra/zunit.inc"
+#include "zebra/rzdir.inc"
       CHARACTER*(*) CHPATH
       CHARACTER*1 CH1
       CHARACTER*2 CH2
@@ -3958,47 +3412,12 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZREAD(IV,N,IPC,IFORM)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /RZCL/ LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
-     +, LTEMP,LCORD,LFROM
-      EQUIVALENCE (LQRS,LQSYSS(7))
-      COMMON /RZCLUN/LUN,LREC,ISAVE,IMODEX,IRELAT,NHPWD,IHPWD(2)
-     +, IZRECL,IMODEC,IMODEH
-      COMMON /RZCOUT/IP1,IR1,IR2,IROUT,IRLOUT,IOPTRR
-      PARAMETER (KUP=5,KPW1=7,KNCH=9,KDATEC=10,KDATEM=11,KQUOTA=12,
-     + KRUSED=13,KWUSED=14,KMEGA=15,KRZVER=16,KIRIN=17,
-     + KIROUT=18,KRLOUT=19,KIP1=20,KNFREE=22,KNSD=23,KLD=24,
-     + KLB=25,KLS=26,KLK=27,KLF=28,KLC=29,KLE=30,KNKEYS=31,
-     + KNWKEY=32,KKDES=33,KNSIZE=253,KEX=6,KNMAX=100)
-      COMMON /MZIOC/ NWFOAV,NWFOTT,NWFODN,NWFORE,IFOCON(3)
-     +, MFOSAV(2), JFOEND,JFOREP,JFOCUR,MFO(200)
+#include "zebra/zunit.inc"
+#include "zebra/rzcl.inc"
+#include "zebra/rzclun.inc"
+#include "zebra/rzcout.inc"
+#include "zebra/rzk.inc"
+#include "zebra/mzioc.inc"
       DIMENSION IV(*)
       NL1=LREC-IP1+1
       IF(IPC.LE.NL1)THEN
@@ -4160,42 +3579,16 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZCHLN (IXST,LP)
-      PARAMETER (IQBITW=32, IQBITC=8, IQCHAW=4)
-      COMMON /ZMACH/ NQBITW,NQBITC,NQCHAW
-     +, NQLNOR,NQLMAX,NQLPTH,NQRMAX,IQLPCT,IQNIL
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+#include "zebra/zmach.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzcn.inc"
       DIMENSION IXST(9), LP(9)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
       IXSTOR = IXST(1)
       IQLN = LP(1)
       IF (IXSTOR.EQ.-7) GO TO 21
-      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) CALL MZSDIV (IXSTOR,-7)
+*#include "zebra/qstore.inc"
+      IF (JBYT(IXSTOR,27,6).NE.JQSTOR)  CALL MZSDIV (IXSTOR,-7)
    21 IF (IQLN.LT.LQSTA(KQT+1)) GO TO 98
       IF (IQLN.GE.LQSTA(KQT+21)) GO TO 98
       IWD = LQ(KQS+IQLN)
@@ -4235,95 +3628,50 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZCHNB (LIX)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+#include "zebra/mqsys.inc"
       DIMENSION LIX(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZCH, 4HNB  /
       K = LOCF (LIX(1)) - LQSTOR
       IF (K.LT.LQSTA(KQT+1)) RETURN
       IF (K.GE.LQEND(KQT+20)) RETURN
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       NQCASE = 1
       NQFATA = 2
       IQUEST(11) = K
       IQUEST(12) = LIX(1)
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZDROP (IXSTOR,LHEADP,CHOPT)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/zvfaut.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzcn.inc"
       DIMENSION LHEADP(9)
       CHARACTER *(*) CHOPT
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZDR, 4HOP  /
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
       LHEAD = LHEADP(1)
       IF (LHEAD.EQ.0) RETURN
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
-      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) CALL MZSDIV (IXSTOR,-7)
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
+*#include "zebra/qstore.inc"
+      IF (JBYT(IXSTOR,27,6).NE.JQSTOR)  CALL MZSDIV (IXSTOR,-7)
       CALL UOPTC (CHOPT,'LV',IQUEST)
       IFLAG = IQUEST(1)
       IF (IQUEST(2).NE.0) IFLAG=-1
@@ -4349,6 +3697,7 @@ c Nobu
       GO TO 999
    41 CALL MZFLAG (IXSTOR,LHEAD,IQDROP,'L')
    88 IF (KHEAD.NE.0) LQ(KQS+KHEAD)=0
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       RETURN
    92 NQCASE = 1
@@ -4357,54 +3706,30 @@ c Nobu
    91 NQCASE = NQCASE + 1
       NQFATA = NQFATA + 1
       IQUEST(11) = LHEAD
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       FUNCTION MZDVAC (IXDIVP)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
       DIMENSION IXDIVP(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZDV, 4HAC  /
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
-      MSBIT1 (IZW,IZP) = IOR (IZW, ISHFT(1,IZP-1))
-      JBYTET (MZ,IZW,IZP,NZB) = IAND (MZ,
-     + ISHFT (ISHFT(IZW,33-IZP-NZB),-(32-NZB)) )
+*#include "zebra/q_jbyt.inc"
+*#include "zebra/q_sbit1.inc"
+*#include "zebra/q_jbytet.inc"
       IXIN = IXDIVP(1)
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       JST = JBYT (IXIN,27,6)
       IF (JST.EQ.JQSTOR) GO TO 31
       IF (JST-16.EQ.JQSTOR) GO TO 21
@@ -4429,57 +3754,28 @@ c Nobu
    47 JDIV = JDIV + 1
       IF (JDIV.LT.21) GO TO 42
    59 MZDVAC = IXAC
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZGARB (IXGP,IXWP)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/zvfaut.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
       DIMENSION IXGP(1), IXWP(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZGA, 4HRB  /
       IXGARB = IXGP(1)
       IXWIPE = IXWP(1)
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       JVLEV = 2
       MQDVGA = 0
       MQDVWI = 0
@@ -4512,63 +3808,36 @@ c Nobu
       CALL MZRELX
       CALL MZMOVE
       IF (IQPART.NE.0) GO TO 24
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       RETURN
    91 NQCASE = 1
       NQFATA = 2
       IQUEST(11) = JSTO
       IQUEST(12) = JQSTOR
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZGAR1
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/zvfaut.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzcn.inc"
+#include "zebra/mzct.inc"
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZGA, 4HR1  /
-      MSBIT1 (IZW,IZP) = IOR (IZW, ISHFT(1,IZP-1))
+*#include "zebra/q_sbit1.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       IQVREM(1,1) = IQVID(1)
       IQVREM(2,1) = IQVID(2)
       MQDVGA = 0
@@ -4633,6 +3902,7 @@ c Nobu
       CALL MZRELX
    67 CALL MZMOVE
    68 IF (NQRESV.LT.0) GO TO 71
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       RETURN
    71 IF (IQPART.NE.0) GO TO 29
@@ -4646,54 +3916,39 @@ c Nobu
       print*,'>>>>>> CALL ZTELL (99,1)'
    91 NQCASE = 1
       NQFATA = 1
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZFORM (CHID,CHFORM,IXIOP)
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      EQUIVALENCE (LQFORM,LQSYSS(5))
+#include "zebra/zvfaut.inc"
+#include "zebra/zkrakc.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/eqlqform.inc"
       EQUIVALENCE (NW,IQUEST(1))
       DIMENSION IXIOP(99)
       CHARACTER CHID*(*), CHFORM*(*)
       DIMENSION MMID(5), MMIX(5), MMIO(5)
+      INTEGER*4 MMID4(5), MMIX4(5), MMIO4(5)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZFO, 4HRM  /
-      DATA MMID / 4HQID , 2, 2, 10, 5 /
-      DATA MMIX / 4HQIOX, 0, 0, 7, 2 /
-      DATA MMIO / 4HQIOD, 0, 0, 50, 1 /
-      MSBYT (MZ,IZW,IZP,NZB) = IOR (
-     + IAND (IZW, NOT(ISHFT (ISHFT(NOT(0),-(32-NZB)),IZP-1)))
-     + ,ISHFT (ISHFT(MZ,32-NZB), -(33-IZP-NZB)) )
+      DATA MMID4 / 4HQID , 2, 2, 10, 5 /
+      DATA MMIX4 / 4HQIOX, 0, 0, 7, 2 /
+      DATA MMIO4 / 4HQIOD, 0, 0, 50, 1 /
+      
+*#include "zebra/q_sbyt.inc"
+
+*      write(*,*) '################## mzform #################'
+      do i = 1,5
+         MMID(i) = MMID4(i)
+         MMIX(i) = MMIX4(i)
+         MMIO(i) = MMIO4(i)
+      enddo
+      
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
@@ -4732,9 +3987,28 @@ c Nobu
       CALL MZPUSH (JQPDVS,LIOD,0,60,'I')
       GO TO 29
    75 CONTINUE
+*      write(*,*) 'mzform MMID, MMIX, MMIO', MMID, MMIX, MMIO
       DO 76 J=1,2
-      CALL MZLIFT (JQPDVS,L,LQFORM,1,MMID,0)
+*      write(*,*) 'mzform 1 KQS, LQ(1+8), LQ(2+8)', KQS, LQ(1+8), LQ(2+8)
+*      write(*,*) 'mzform 1 KQS, LOCF(LQ(1+8))', LOCF(LQ(1+8))
+*      write(*,*) 'mzform 1 KQS, LOCF(LQ(2+8))', LOCF(LQ(2+8))
+*      write(*,*) 'mzform 1 JQPDVS,LIX,L,MMIX', JQPDVS,LIX,L,MMIX
+*      write(*,*) 'mzform 1 KQS', KQS
+*      write(*,*) 'mzform 1 LQ(KQS+9865)', LQ(KQS+9865)
+         CALL MZLIFT (JQPDVS,L,LQFORM,1,MMID,0)
+*      write(*,*) 'mzform 1 KQS', KQS
+*      write(*,*) 'mzform 1 LQ(KQS+9865)', LQ(KQS+9865)
+*      write(*,*) 'mzform 1 KQS, LQ(1+8), LQ(2+8)', KQS, LQ(1+8), LQ(2+8)
+*      write(*,*) 'mzform 1 KQS, LOCF(LQ(1+8))', LOCF(LQ(1+8))
+*      write(*,*) 'mzform 1 KQS, LOCF(LQ(2+8))', LOCF(LQ(2+8))
+*      write(*,*) 'mzform 1 JQPDVS,LIX,L,MMIX', JQPDVS,LIX,L,MMIX
       CALL MZLIFT (JQPDVS,LIX,L,-1,MMIX,0)
+*      write(*,*) 'mzform 1 KQS', KQS
+*      write(*,*) 'mzform 1 LQ(KQS+9865)', LQ(KQS+9865)
+*      write(*,*) 'mzform 1 KQS, LQ(1+8), LQ(2+8)', KQS, LQ(1+8), LQ(2+8)
+*      write(*,*) 'mzform 1 KQS, LOCF(LQ(1+8))', LOCF(LQ(1+8))
+*      write(*,*) 'mzform 1 KQS, LOCF(LQ(2+8))', LOCF(LQ(2+8))
+*      write(*,*) 'mzform 1 JQPDVS,LIX,L,MMIX', JQPDVS,LIX,L,MMIX
    76 CONTINUE
       CALL MZLIFT (JQPDVS,L,LQFORM,-2,MMIO,0)
       IQ(KQSP+L+1) = 1
@@ -4744,34 +4018,9 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       FUNCTION MZFDIV (IXST,LIXP)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+#include "zebra/mqsys.inc"
       DIMENSION IXST(9), LIXP(9)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
       IXSTOR = IXST(1)
       LIX = LIXP(1)
       IF (IXSTOR.NE.-7) THEN
@@ -4798,42 +4047,10 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZFGAP
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
       DIMENSION NGAPV(7), JDIVV(7), JSTOV(7), JPV(7)
       EQUIVALENCE (NGAPV(1),IQUEST(11)), (JDIVV(1),IQUEST(21))
       EQUIVALENCE (JSTOV(1),IQUEST(31)), (JPV(1), IQUEST(41))
@@ -4941,46 +4158,18 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABC
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/mzcn.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
       EQUIVALENCE (LS,IQLS), (LNX,IQNX)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZTA, 4HBC  /
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
+*#include "zebra/q_jbit.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       NQFRTC = 0
       NQLIVE = 0
       N = 0
@@ -5023,6 +4212,7 @@ c Nobu
       LQ(LQTE+2) = 0
       LQ(LQTE+3) = 0
    45 LQTE = LQTE + 4
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       RETURN
    91 NQCASE = 1
@@ -5032,53 +4222,27 @@ c Nobu
       IQUEST(13) = LQMTC2
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*#include "zebra/qtofatal.inc"
+      IQUEST(9) = NAMESR(1)
+      IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABF
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZTA, 4HBF  /
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
+*#include "zebra/q_jbit.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       LMT = LQMTA
       NCOLL = 0
       NGARB = 0
@@ -5148,53 +4312,24 @@ c Nobu
       IF (NCOLL.EQ.0) GO TO 81
       LQTE = LQRTA + LQ(LCOLL+5)
    81 CONTINUE
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABH
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZTA, 4HBH  /
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       IF (JQGAPM.NE.0) GO TO 41
       CALL MZFGAP
       NW = LQMTE+1 - LQMTA
@@ -5210,6 +4345,7 @@ c Nobu
       LQRTE = LQRTE + 161
       IQGAP(1,JQGAPM) = IQGAP(1,JQGAPM) - NW
       IQGAP(2,JQGAPM) = IQGAP(2,JQGAPM) + NW
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       RETURN
    26 IF (IQTNMV.EQ.0) JQGAPM=NQGAP
@@ -5245,49 +4381,19 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABM
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZTA, 4HBM  /
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
-      MSBIT1 (IZW,IZP) = IOR (IZW, ISHFT(1,IZP-1))
+*#include "zebra/q_jbit.inc"
+*#include "zebra/q_sbit1.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       LQMTBR = 0
       IQTBIT = IQDROP
       IQTVAL = 0
@@ -5348,50 +4454,20 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABR
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
       EQUIVALENCE (LMT,LQMTB)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZTA, 4HBR  /
-      MSBIT0 (IZW,IZP) = IAND (IZW, NOT(ISHFT(1,IZP-1)))
-      MSBIT1 (IZW,IZP) = IOR (IZW, ISHFT(1,IZP-1))
+*#include "zebra/q_sbit0.inc"
+*#include "zebra/q_sbit1.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       IF (LQMTBR.NE.0) GO TO 81
       LQTA = LQRTA + 2
       LQTE = LQTA
@@ -5446,6 +4522,7 @@ c Nobu
       IF (LMT.LT.LQMTE) GO TO 41
       JDIV = LQ(LMT)
       LQ(LQTE) = LQSTA(KQT+JDIV)
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       RETURN
    81 LMT = LQMTBR
@@ -5475,39 +4552,9 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABS
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
-      MSBIT1 (IZW,IZP) = IOR (IZW, ISHFT(1,IZP-1))
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
+*#include "zebra/q_sbit1.inc"
       LMT = LQMTA
    21 LMT = LMT + 8
       JDIV = LQ(LMT)
@@ -5524,40 +4571,10 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZTABX
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
-      JBYTET (MZ,IZW,IZP,NZB) = IAND (MZ,
-     + ISHFT (ISHFT(IZW,33-IZP-NZB),-(32-NZB)) )
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
+*#include "zebra/q_or.inc"
+*#include "zebra/q_jbytet.inc"
       MERGE = 0
       LMT = LQMTA
    22 IF (LQ(LMT+1).LT.2) GO TO 27
@@ -5579,24 +4596,12 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZIOCH (IODVEC,NWIOMP,CHFORM)
-      COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /ZBCD/ IQNUM2(11),IQLETT(26),IQNUM(10), IQPLUS,IQMINS
-     +, IQSTAR,IQSLAS,IQOPEN,IQCLOS,IQDOLL,IQEQU, IQBLAN
-     +, IQCOMA,IQDOT, IQNUMB,IQAPO, IQEXCL,IQCOLO,IQQUOT
-     +, IQUNDE,IQCLSQ,IQAND, IQAT, IQQUES,IQOPSQ,IQGREA
-     +, IQLESS,IQREVE,IQCIRC,IQSEMI,IQPERC, IQLOWL(26)
-     +, IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV, IQILEG
-     +, NQHOL0,NQHOLL(95)
+#include "zebra/zkrakc.inc"
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/quest.inc"
+#include "zebra/mzca.inc"
+#include "zebra/zbcd.inc"
       DIMENSION IODVEC(99), NWIOMP(9)
       CHARACTER CHFORM*(*)
       EQUIVALENCE (NGR,IQUEST(1)), (NGRU,IQUEST(2))
@@ -5619,13 +4624,13 @@ c Nobu
       DATA MXVALA / 0, 65536, 1024, 256 /
       DATA MXVALB / 0, 16384, 512, 128 /
       DATA MXVALC / 0, 2048, 64, 16, 4, 2, 2 /
-      MSBIT1 (IZW,IZP) = IOR (IZW, ISHFT(1,IZP-1))
-      MSBYT (MZ,IZW,IZP,NZB) = IOR (
-     + IAND (IZW, NOT(ISHFT (ISHFT(NOT(0),-(32-NZB)),IZP-1)))
-     + ,ISHFT (ISHFT(MZ,32-NZB), -(33-IZP-NZB)) )
+*#include "zebra/q_sbit1.inc"
+*#include "zebra/q_sbyt.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       NWIOMX = NWIOMP(1)
       NCH = LEN (CHFORM)
       IF (NCH.GE.121) GO TO 90
@@ -5837,6 +4842,7 @@ c Nobu
       IQCETK(121) = IQBLAN
       IF (NQLOGM.GE.1) WRITE (IQLOG,9088) NWIO,CHFORM
  9088 FORMAT (' MZIOCH-',I5,' extra I/O words for Format ',A)
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       RETURN
    90 NQFATA = 2
@@ -5874,64 +4880,40 @@ c Nobu
    88 CONTINUE
       NQFATA = (NCH-1)/4 + 4
    99 IQUEST(11) = IQCETK(121)
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZFLAG (IXSTOR,LHEADP,KBITP,CHOPT)
-      COMMON /ZLIMIT/LQLIML,LQLIMH
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      PARAMETER (NQWKTT=2560)
-      COMMON /MZCWK/ IQWKTB(NQWKTT), IQWKFZ(NQWKTT)
+#include "zebra/zlimit.inc"
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/zvfaut.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzcn.inc"
+#include "zebra/mzcwk.inc"
       DIMENSION KBITP(9),LHEADP(9)
       CHARACTER *(*) CHOPT
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZFL, 4HAG  /
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
-      MSBIT0 (IZW,IZP) = IAND (IZW, NOT(ISHFT(1,IZP-1)))
-      MSBIT1 (IZW,IZP) = IOR (IZW, ISHFT(1,IZP-1))
-      MSBIT (MZ,IZW,IZP) = IOR (IAND (IZW, NOT(ISHFT(1,IZP-1)))
-     + ,ISHFT(IAND(MZ,1),IZP-1))
+*#include "zebra/q_jbit.inc"
+*#include "zebra/q_jbyt.inc"
+*#include "zebra/q_sbit0.inc"
+*#include "zebra/q_sbit1.inc"
+*#include "zebra/q_sbit.inc"
       LHEAD = LHEADP(1)
       IF (LHEAD.EQ.0) RETURN
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
-      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) CALL MZSDIV (IXSTOR,-7)
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
+*#include "zebra/qstore.inc"
+      IF (JBYT(IXSTOR,27,6).NE.JQSTOR)  CALL MZSDIV (IXSTOR,-7)
       CALL MZCHLS (-7,LHEAD)
       IF (IQFOUL.NE.0) GO TO 92
       LQLIML = LQSTA(KQT+21)
@@ -5995,6 +4977,7 @@ c Nobu
       IQ(KQS+LHEAD) = MSBIT (IQTVAL,IQ(KQS+LHEAD),IQTBIT)
       LQLIML = MIN (LQLIML,LHEAD)
       LQLIMH = MAX (LQLIMH,LHEAD)
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       RETURN
    95 NQCASE = 2
@@ -6012,45 +4995,17 @@ c Nobu
    91 NQCASE = NQCASE + 1
       NQFATA = NQFATA + 1
       IQUEST(11) = LHEAD
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZGSTA (IGARB)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
       DIMENSION IGARB(20)
       LMT = LQMTA
    22 IACT = LQ(LMT+1)
@@ -6067,8 +5022,8 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZIOCF (JUP,MXVAL)
-      COMMON /ZKRAKC/IQHOLK(120), IQKRAK(80), IQCETK(122)
-      COMMON /QUEST/ IQUEST(100)
+#include "zebra/zkrakc.inc"
+#include "zebra/quest.inc"
       DIMENSION MU(99)
       EQUIVALENCE (MU(1),IQHOLK(1))
       EQUIVALENCE (NGR,IQUEST(1)), (NGRU,IQUEST(2))
@@ -6088,17 +5043,16 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZIOCR (IOW)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /MZIOC/ NWFOAV,NWFOTT,NWFODN,NWFORE,IFOCON(3)
-     +, MFOSAV(2), JFOEND,JFOREP,JFOCUR,MFO(200)
+#include "zebra/quest.inc"
+#include "zebra/mzioc.inc"
       EQUIVALENCE (JIO,IQUEST(1))
       DIMENSION IOW(9)
       DIMENSION NBITVA(4), NBITVB(4), NBITVC(7)
       DATA NBITVA / 32, 16, 10, 8 /
       DATA NBITVB / 29, 14, 9, 7 /
       DATA NBITVC / 26, 11, 6, 4, 2, 1, 1 /
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbit.inc"
+*#include "zebra/q_jbyt.inc"
       NWFODN = 0
       JFOCUR = 0
       JTYPR = IOW(1)
@@ -6214,43 +5168,15 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       FUNCTION MZIXCO (IXAA,IXBB,IXCC,IXDD)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+#include "zebra/mqsys.inc"
       DIMENSION IXAA(9), IXBB(9), IXCC(9), IXDD(9), IXV(4)
       EQUIVALENCE (IXV(1),IQUEST(11))
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZIX, 4HCO  /
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
-      MSBIT1 (IZW,IZP) = IOR (IZW, ISHFT(1,IZP-1))
-      MSBYT (MZ,IZW,IZP,NZB) = IOR (
-     + IAND (IZW, NOT(ISHFT (ISHFT(NOT(0),-(32-NZB)),IZP-1)))
-     + ,ISHFT (ISHFT(MZ,32-NZB), -(33-IZP-NZB)) )
-      MBYTOR (MZ,IZW,IZP,NZB) = IOR (IZW,
-     + ISHFT (ISHFT(MZ,32-NZB),-(33-IZP-NZB)))
+*#include "zebra/q_jbyt.inc"
+*#include "zebra/q_sbit1.inc"
+*#include "zebra/q_sbyt.inc"
+*#include "zebra/q_mbytor.inc"
       IXV(1) = IXAA(1)
       IXV(2) = IXBB(1)
       IXV(3) = IXCC(1)
@@ -6294,59 +5220,33 @@ c Nobu
       IQUEST(15) = JL
       IQUEST(16) = JST
       IQUEST(17) = JDV
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       MZIXCO = 0
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZMOVE
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZMO, 4HVE  /
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
+*#include "zebra/q_jbit.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       LMT = LQMTA
    23 JDIV = LQ(LMT)
       IACT = LQ(LMT+1)
@@ -6402,40 +5302,18 @@ c Nobu
    88 IF (LTR.NE.LTF) GO TO 81
       LTF = LTFN
       IF (LTF.NE.LQTE) GO TO 61
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZPUDX (LP,NWP)
-      COMMON /ZBCD/ IQNUM2(11),IQLETT(26),IQNUM(10), IQPLUS,IQMINS
-     +, IQSTAR,IQSLAS,IQOPEN,IQCLOS,IQDOLL,IQEQU, IQBLAN
-     +, IQCOMA,IQDOT, IQNUMB,IQAPO, IQEXCL,IQCOLO,IQQUOT
-     +, IQUNDE,IQCLSQ,IQAND, IQAT, IQQUES,IQOPSQ,IQGREA
-     +, IQLESS,IQREVE,IQCIRC,IQSEMI,IQPERC, IQLOWL(26)
-     +, IQCROP,IQVERT,IQCRCL,IQNOT, IQGRAV, IQILEG
-     +, NQHOL0,NQHOLL(95)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
+#include "zebra/zbcd.inc"
+#include "zebra/mqsysh.inc"
       DIMENSION LP(9),NWP(9)
-      MSBIT1 (IZW,IZP) = IOR (IZW, ISHFT(1,IZP-1))
-      MSBYT (MZ,IZW,IZP,NZB) = IOR (
-     + IAND (IZW, NOT(ISHFT (ISHFT(NOT(0),-(32-NZB)),IZP-1)))
-     + ,ISHFT (ISHFT(MZ,32-NZB), -(33-IZP-NZB)) )
+*#include "zebra/q_sbit1.inc"
+*#include "zebra/q_sbyt.inc"
       L = LP(1)
       NW = NWP(1)
       ND = NW - 10
@@ -6457,49 +5335,19 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZRELB
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzcn.inc"
+#include "zebra/mzct.inc"
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZRE, 4HLB  /
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       LFIXLO = LQ(LQTA-1)
       LFIXRE = LQ(LQTA)
       LFIXHI = LQ(LQTE)
@@ -6637,64 +5485,37 @@ c Nobu
       NQFATA = NQFATA + 1
       IQUEST(11) = LN
       IF (IQFLIO.NE.0) GO TO 98
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
    98 IQUEST(9) = NQCASE
       IQUEST(10)= NQFATA
       NQCASE = 0
       NQFATA = 0
       IQFLIO = -7
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZRELL (MDESV)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzcn.inc"
+#include "zebra/mzct.inc"
       DIMENSION MDESV(99)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZRE, 4HLL  /
-      JBIT(IZW,IZP) = IAND(ISHFT(IZW,-(IZP-1)),1)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbit.inc"
+*#include "zebra/q_jbyt.inc"
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       LFIXLO = LQ(LQTA-1)
       LFIXRE = LQ(LQTA)
       LFIXHI = LQ(LQTE)
@@ -6712,6 +5533,7 @@ c Nobu
       IF (JDES.GE.JDESMX) GO TO 999
       LOCAR = MDESV(JDES+1)
       LIX = LOCAR
+*      write(*,*) 'MZRELL: LIX, JDES', LIX,JDES
       LOCARE = MDESV(JDES+2)
       MODAR = MDESV(JDES+3)
       IF (JBIT(MODAR,31).NE.0) THEN
@@ -6785,106 +5607,70 @@ c Nobu
       IQUEST(13) = LINK
       IQUEST(14) = MDESV(JDES+4)
       IQUEST(15) = MDESV(JDES+5)
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZRELX
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCT/ MQDVGA,MQDVWI,JQSTMV,JQDVM1,JQDVM2,NQDVMV,IQFLIO
-     +, MQDVAC,NQNOOP,IQPART,NQFREE, IQTBIT,IQTVAL
-     +, IQTNMV,JQGAPM,JQGAPR,NQGAPN,NQGAP,IQGAP(5,4)
-     +, LQTA,LQTE, LQRTA,LQTC1,LQTC2,LQRTE
-     +, LQMTA,LQMTB,LQMTE,LQMTLU,LQMTBR
-     +, LQMTC1,LQMTC2, NQFRTC,NQLIVE
+#include "zebra/zstate.inc"
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzct.inc"
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZRE, 4HLX  /
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
       L = LQSYSS(KQT+1)
       IF (L.NE.0) THEN
           IQ(KQS+L+3) = IQ(KQS+L+2) + NQLINK
           CALL MZRELL (IQ(KQS+L+1))
         ENDIF
       CALL MZRELB
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZSDIV (IXDIVP,IFLAGP)
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +, NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+#include "zebra/zstate.inc"
+#include "zebra/mqsys.inc"
       DIMENSION IXDIVP(9), IFLAGP(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HMZSD, 4HIV  /
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
+*      write(*,*) 'MZSDIV 1 KQT', KQT
+*      write(*,*) 'MZSDIV 1 LQSTA(KQT+21)',  LQSTA(KQT+21)
+*      write(*,*) 'MZSDIV 1 LQSTA(KQT+1)',  LQSTA(KQT+1)
       IXIN = IXDIVP(1)
       IFLAG = IFLAGP(1)
       JSTO = JBYT (IXIN,27,4)
+*      write(*,*) 'MZSDIV 1.1 LQSTA(KQT+21)',  LQSTA(KQT+21)
+*      write(*,*) 'MZSDIV 1.1 LQSTA(KQT+1)',  LQSTA(KQT+1)
+*      write(*,*) 'MZSDIV 1.1 JSTO, JQSTOR', JSTO, JQSTOR
+*      write(*,*) 'MZSDIV 1.1 NQOFFT(JSTO+1)', NQOFFT(JSTO+1)
+*      write(*,*) 'MZSDIV 1.1 LQSTA(NQOFFT(JSTO+1)+1)'
+*      write(*,*) LQSTA(NQOFFT(JSTO+1)+1)
+*      write(*,*) 'MZSDIV 1.1 LQSTA(NQOFFT(JSTO+1)+21)'
+*      write(*,*) LQSTA(NQOFFT(JSTO+1)+21)
       IF (JSTO.NE.JQSTOR) GO TO 41
+*      write(*,*) 'MZSDIV 1.2 LQSTA(KQT+21)',  LQSTA(KQT+21)
+*      write(*,*) 'MZSDIV 1.2 LQSTA(KQT+1)',  LQSTA(KQT+1)
+*      write(*,*) 'MZSDIV 1.2 JQSTOR', JQSTOR
+*      write(*,*) 'MZSDIV 1.2 NQOFFT(JQSTOR+1)', NQOFFT(JQSTOR+1)
       IF (IFLAG.LT.0) GO TO 48
    21 JDIV = JBYT (IXIN,1,26)
       JCOM = JBYT (IXIN,31,2)
+
       IF (JCOM-1) 22, 31, 91
    22 IF (JDIV.GE.25) GO TO 92
       IF (JDIV.GE.21) GO TO 24
@@ -6895,6 +5681,7 @@ c Nobu
           IF (IFLAG.EQ.4) GO TO 94
         ENDIF
       JQDIVI = JDIV
+*      write(*,*) 'MZSDIV 11 KQT', KQT
       RETURN
    24 IF (JDIV.EQ.24) GO TO 26
       IF (IFLAG.GT.0) GO TO 93
@@ -6909,7 +5696,13 @@ c Nobu
    41 IF (JSTO.GT.NQSTOR) GO TO 91
       JQSTOR = JSTO
       JQDIVR = 0
+*      write(*,*) 'MZSDIV 2 KQT', KQT
+*      write(*,*) 'MZSDIV 1.5 LQSTA(KQT+21)',  LQSTA(KQT+21)
+*      write(*,*) 'MZSDIV 1.5 LQSTA(KQT+1)',  LQSTA(KQT+1)
       KQT = NQOFFT(JQSTOR+1)
+*      write(*,*) 'MZSDIV 1.7 LQSTA(KQT+21)',  LQSTA(KQT+21)
+*      write(*,*) 'MZSDIV 1.7 LQSTA(KQT+1)',  LQSTA(KQT+1)
+*      write(*,*) 'MZSDIV 3 KQT', KQT
       KQS = NQOFFS(JQSTOR+1)
       DO 44 J=1,12
    44 IQCUR(J) = IQTABV(KQT+J)
@@ -6927,49 +5720,29 @@ c Nobu
       IQUEST(11) = IXIN
       IQUEST(12) = IFLAG
       IQUEST(13) = JSTO
+*#include "zebra/qtrace.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
+*      IF (NQTRAC.GE.41)      CALL ZFATAL
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE ZSHUNT (IXSTOR,LSHP,LSUPP,JBIASP,IFLAGP)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN, NQUSED
-      PARAMETER (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/ IQFENC(4), LQ(100)
-                              DIMENSION IQ(92), Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/ NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +, LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +, MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +, NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/ JQSTOR,KQT,KQS, JQDIVI,JQDIVR
-     +, JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +, LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +, JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/ LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +, JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +, LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +, LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +, IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +, NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +, NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +, IQDN1(20), IQDN2(20), KQFT, LQFSTA(21)
-                                       DIMENSION IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /MZCN/ IQLN,IQLS,IQNIO,IQID,IQNL,IQNS,IQND, IQNX,IQFOUL
+#include "zebra/zunit.inc"
+#include "zebra/mqsys.inc"
+#include "zebra/mzcn.inc"
       DIMENSION LSHP(9),LSUPP(9),JBIASP(9),IFLAGP(9)
       DIMENSION NAMESR(2)
       DATA NAMESR / 4HZSHU, 4HNT  /
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbyt.inc"
+*#include "zebra/q_locf.inc"
+*#include "zebra/qtraceq.inc"
       MQTRAC(NQTRAC+1) = NAMESR(1)
       MQTRAC(NQTRAC+2) = NAMESR(2)
       NQTRAC = NQTRAC + 2
@@ -6978,7 +5751,8 @@ c Nobu
       LSUP = LSUPP(1)
       JBIAS = JBIASP(1)
       IFLAG = IFLAGP(1)
-      IF (JBYT(IXSTOR,27,6).NE.JQSTOR) CALL MZSDIV (IXSTOR,-7)
+*#include "zebra/qstore.inc"
+      IF (JBYT(IXSTOR,27,6).NE.JQSTOR)  CALL MZSDIV (IXSTOR,-7)
       CALL MZCHLS (-7,LSH)
       IF (IQFOUL.NE.0) GO TO 91
       IF (NQLOGL.GE.2) THEN
@@ -7061,6 +5835,7 @@ c Nobu
       LQ(KQS+LSH+2) = KIN
       LQ(KQS+LEND) = LNIN
       IF (LNIN.NE.0) LQ(KQS+LNIN+2) = LEND
+*#include "zebra/qtrace99.inc"
   999 NQTRAC = NQTRAC - 2
       RETURN
    95 NQCASE = 1
@@ -7077,15 +5852,16 @@ c Nobu
       IQUEST(12) = LSUP
       IQUEST(13) = JBIAS
       IQUEST(14) = IFLAG
+*#include "zebra/qtofatal.inc"
       IQUEST(9) = NAMESR(1)
       IQUEST(10)= NAMESR(2)
+*      CALL ZFATAL
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE ZHTOI (HOLL,INTV,NP)
-      PARAMETER (NQTCET=256)
-      COMMON /ZCETA/ IQCETA(256),IQTCET(256)
+#include "zebra/zceta.inc"
       INTEGER INTV(99), HOLL(99)
       DO 39 JWH=1,NP
       MWH = HOLL(JWH)
@@ -7105,46 +5881,10 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZSCAN(CHPATH,UROUT)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
-     +,              LTEMP,LCORD,LFROM
-      EQUIVALENCE (LQRS,LQSYSS(7))
-      PARAMETER (NLPATM=100)
-      COMMON /RZDIRN/NLCDIR,NLNDIR,NLPAT
-      COMMON /RZDIRC/CHCDIR(NLPATM),CHNDIR(NLPATM),CHPAT(NLPATM)
-      CHARACTER*16   CHNDIR,    CHCDIR,    CHPAT
-      COMMON /RZCH/  CHWOLD,CHL
-      CHARACTER*255  CHWOLD,CHL
-      PARAMETER (KUP=5,KPW1=7,KNCH=9,KDATEC=10,KDATEM=11,KQUOTA=12,
-     +           KRUSED=13,KWUSED=14,KMEGA=15,KRZVER=16,KIRIN=17,
-     +           KIROUT=18,KRLOUT=19,KIP1=20,KNFREE=22,KNSD=23,KLD=24,
-     +           KLB=25,KLS=26,KLK=27,KLF=28,KLC=29,KLE=30,KNKEYS=31,
-     +           KNWKEY=32,KKDES=33,KNSIZE=253,KEX=6,KNMAX=100)
+#include "zebra/rzcl.inc"
+#include "zebra/rzdir.inc"
+#include "zebra/rzch.inc"
+#include "zebra/rzk.inc"
       CHARACTER *(*) CHPATH
       EXTERNAL UROUT
       DIMENSION ISD(NLPATM),NSD(NLPATM),IHDIR(4)
@@ -7198,72 +5938,31 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE MZWIPE (IXWP)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+#include "zebra/mqsysh.inc"
+#include "zebra/zvfaut.inc"
       DIMENSION    IXWP(9)
       DIMENSION    NAMESR(2)
       DATA  NAMESR / 4HMZWI, 4HPE   /
+* Not included Nobu 2021.09.05
+*#include "zebra/qtrace.inc"
       IXWIPE = IXWP(1)
       IF (IXWIPE.EQ.0)  IXWIPE=21
       CALL MZGARB (0,IXWIPE)
+* Not included Nobu 2021.09.05
+*#include "zebra/qtrace99.inc"
       END
 
 *-------------------------------------------------------------------------------
 
       SUBROUTINE RZEND(CHDIR)
-      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
-      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
-      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
-     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
-      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
-      COMMON /QUEST/ IQUEST(100)
-      COMMON /ZEBQ/  IQFENC(4), LQ(100)
-                              DIMENSION    IQ(92),        Q(92)
-                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
-      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
-     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
-     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
-     +,              NQTRAC,MQTRAC(48)
-                                       EQUIVALENCE (KQSP,NQOFFS(1))
-      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
-     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
-     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
-     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
-                                       DIMENSION    IQCUR(16)
-                                       EQUIVALENCE (IQCUR(1),LQSTOR)
-      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
-     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
-     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
-     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
-     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
-     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
-     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
-     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
-                                       DIMENSION    IQTABV(16)
-                                       EQUIVALENCE (IQTABV(1),LQPSTO)
-      COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
-     +,              LTEMP,LCORD,LFROM
-      EQUIVALENCE (LQRS,LQSYSS(7))
+#include "zebra/zunit.inc"
+#include "zebra/zstate.inc"
+#include "zebra/rzcl.inc"
       CHARACTER  CHDIR*(*)
       DIMENSION IHDIR(4)
       LOGICAL RZSAME
-      JBIT(IZW,IZP)     = IAND(ISHFT(IZW,-(IZP-1)),1)
-      JBYT(IZW,IZP,NZB) = ISHFT(ISHFT(IZW,33-IZP-NZB),-(32-NZB))
+*#include "zebra/q_jbit.inc"
+*#include "zebra/q_jbyt.inc"
       IQUEST(1)=0
       IF(LQRS.EQ.0)GO TO 99
       CALL RZSAVE

@@ -86,21 +86,28 @@
 
 *-------------------------------------------------------------------------------
 
-      FUNCTION LOCF (IVAR)
+      FUNCTION LOCF (IVAR)      
+c Nobu added INTEGER*8
+      INTEGER*8 LOCF, J
       DIMENSION    IVAR(9)
+#if !defined(DOUBLE_PRECISION)
       PARAMETER    (NADUPW=4, LADUPW=2)
+#else
+      PARAMETER    (NADUPW=4, LADUPW=3)
+#endif
       J = LOC(IVAR)
       LOCF = ISHFT (J, -LADUPW)
-c Nobu
-c      print*,'IVAR 3',IVAR
-c      print*,'J',J
-c      print*,'LOCF',LOCF
-c Nobu
       END
 
       FUNCTION LOCFR (VAR)
+c Nobu added INTEGER*8
+      INTEGER*8 LOCFR, J
       DIMENSION    VAR(9)
+#if !defined(DOUBLE_PRECISION)
       PARAMETER    (NADUPW=4, LADUPW=2)
+#else
+      PARAMETER    (NADUPW=4, LADUPW=3)
+#endif
       J = LOC(VAR)
       LOCFR = ISHFT (J, -LADUPW)
       END
@@ -132,7 +139,11 @@ c Nobu
       FUNCTION JBYT (IZW,IZP,NZB)
       PARAMETER (NBITPW=32)
       PARAMETER (NCHAPW=4)
-      JBYT = ISHFT(ISHFT(IZW,NBITPW+1-IZP-NZB), -(NBITPW-NZB))
+* For -fdefault-integer-8 option of gfortran Nobu 2021.09.06
+*      JBYT = ISHFT(ISHFT(IZW,NBITPW+1-IZP-NZB), -(NBITPW-NZB))
+      JBYT = ISHFT(
+     +     IAND(ISHFT(IZW,NBITPW+1-IZP-NZB),Z'FFFFFFFF'),
+     +     -(NBITPW-NZB))
       END
 
 *-------------------------------------------------------------------------------
@@ -179,7 +190,12 @@ c Nobu
       SUBROUTINE SBYT (IT,IZW,IZP,NZB)
       PARAMETER (NBITPW=32)
       PARAMETER (NCHAPW=4)
+      INTEGER*4      IALL11
       PARAMETER (IALL11 = -1)
+* For -fdefault-integer-8 option of gfortran Nobu 2021.09.06
+*      MSK = ISHFT (IALL11, -(NBITPW-NZB))
+*      IZW = IOR ( IAND (IZW, NOT(ISHFT(MSK,IZP-1)))
+*     +, ISHFT(IAND(IT,MSK),IZP-1))
       MSK = ISHFT (IALL11, -(NBITPW-NZB))
       IZW = IOR ( IAND (IZW, NOT(ISHFT(MSK,IZP-1)))
      +, ISHFT(IAND(IT,MSK),IZP-1))
@@ -331,6 +347,7 @@ c Nobu
       DIMENSION MIV(99), MBV(99), JTHP(9), NINTP(9), NBITS(2)
       PARAMETER (NBITPW=32)
       PARAMETER (NCHAPW=4)
+      INTEGER*4 IALL11
       PARAMETER (IALL11 = -1)
 
       JTH = JTHP(1)
@@ -406,6 +423,8 @@ c Nobu
 *-------------------------------------------------------------------------------
 
       SUBROUTINE UCOPY2 (A,B,N)
+c Nobu added INTEGER*8 2021.09.06
+      INTEGER*8  IA, IB, LOCFR
       DIMENSION A(*),B(*)
       IF (N.LT.2) GO TO 41
       IA = LOCFR (A)
